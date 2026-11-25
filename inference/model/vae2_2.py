@@ -826,6 +826,33 @@ class WanVAE_(nn.Module):
         self.clear_cache()
         return mu
 
+    def decode(self, z, scale):
+        """Full Wan2.2 decode (restored; upstream MAGI-2 ships only encode).
+
+        Causal, one latent frame at a time with a per-conv feature cache, as in
+        the reference Wan2.2 implementation.
+        """
+        self.clear_cache()
+        if isinstance(scale[0], torch.Tensor):
+            z = z / scale[1].view(1, self.z_dim, 1, 1, 1) + scale[0].view(1, self.z_dim, 1, 1, 1)
+        else:
+            z = z / scale[1] + scale[0]
+        iter_ = z.shape[2]
+        x = self.conv2(z)
+        out = None
+        for i in range(iter_):
+            self._conv_idx = [0]
+            out_ = self.decoder(
+                x[:, :, i : i + 1, :, :],
+                feat_cache=self._feat_map,
+                feat_idx=self._conv_idx,
+                first_chunk=(i == 0),
+            )
+            out = out_ if out is None else torch.cat([out, out_], 2)
+        out = unpatchify(out, patch_size=2)
+        self.clear_cache()
+        return out
+
     def reparameterize(self, mu, log_var):
         std = torch.exp(0.5 * log_var)
         eps = torch.randn_like(std)
@@ -1023,6 +1050,11 @@ class Wan2_2_VAE:
 
     def encode(self, video):
         return self.vae.encode(video, self.scale).float()
+
+    @torch.no_grad()
+    def decode(self, z):
+        dtype = next(self.vae.parameters()).dtype
+        return self.vae.decode(z.to(dtype), self.scale).float().clamp_(-1, 1)
 
     def to(self, *args, **kwargs):
         self.mean = self.mean.to(*args, **kwargs)

@@ -157,6 +157,97 @@ def _apply_router_bias_ema(state_dict: dict[str, torch.Tensor]) -> dict[str, tor
     return state_dict
 
 
+_EXPERT_WEIGHT_SUFFIXES = ("moe_mlp.W_gate", "moe_mlp.W_up", "moe_mlp.W_down")
+
+
+@torch.no_grad()
+def release_preview_experts_(model: torch.nn.Module) -> int:
+    """Free every MoE layer's expert weights on GPU; returns bytes freed."""
+    from inference.model.magi2_preview import CoreMultiHeadMoE
+
+    return sum(m.release_expert_storage_() for m in model.modules() if isinstance(m, CoreMultiHeadMoE))
+
+
+@torch.no_grad()
+def reload_preview_experts_(model: torch.nn.Module, engine_config: EngineConfig) -> bool:
+    """Re-materialize expert weights freed by ``release_preview_experts_``.
+
+    Returns False (no-op) if nothing was released.
+    """
+    from inference.model.magi2_preview import CoreMultiHeadMoE
+    from inference.utils import env_is_true
+
+    moes = [m for m in model.modules() if isinstance(m, CoreMultiHeadMoE)]
+    if not any(m.expert_storage_released() for m in moes):
+        return False
+    for m in moes:
+        m.restore_expert_storage_()
+    if env_is_true("SKIP_LOAD_MODEL"):
+        for m in moes:
+            for name in m._EXPERT_PARAM_NAMES:
+                getattr(m, name).zero_()
+    else:
+        stream_load_magi2_model_(model, engine_config, only_suffixes=_EXPERT_WEIGHT_SUFFIXES)
+    return True
+
+
+@torch.no_grad()
+def stream_load_magi2_model_(
+    model: torch.nn.Module,
+    engine_config: EngineConfig,
+    only_suffixes: tuple[str, ...] | None = None,
+) -> None:
+    """Load weights tensor-by-tensor straight into an already-on-GPU model.
+
+    Unlike :func:`load_magi2_model_state_dict`, nothing is accumulated in host
+    RAM, so two EP ranks can load a checkpoint larger than system memory. MoE
+    expert tensors are routed through ``CoreMultiHeadMoE.load_expert_weight_``
+    so they can be quantized on the GPU when MAGI2_MOE_FP8=1.
+    """
+    from inference.model.magi2_preview import CoreMultiHeadMoE
+
+    checkpoint_dir = engine_config.load
+    if not checkpoint_dir:
+        raise ValueError("engine_config.load must point at a safetensors checkpoint directory")
+    print_rank_0(f"[magi2] Streaming preview weights from {checkpoint_dir} to GPU")
+
+    targets = model.state_dict()
+    if only_suffixes is not None:
+        targets = {k: v for k, v in targets.items() if k.endswith(only_suffixes)}
+    weight_map = {k: p for k, p in read_safetensors_weight_map(checkpoint_dir).items() if k in targets}
+    missing = sorted(set(targets) - set(weight_map))
+    if missing:
+        raise KeyError(f"{len(missing)} model tensors missing from checkpoint, e.g. {missing[:5]}")
+
+    use_ema_bias = (os.environ.get("MAGI2_ROUTER_BIAS_SOURCE") or "ema").strip().lower() != "main"
+    modules = dict(model.named_modules())
+    device = next(model.parameters()).device
+
+    by_shard: dict[str, list[str]] = defaultdict(list)
+    for key, path in weight_map.items():
+        by_shard[path].append(key)
+
+    copied_bias = 0
+    for path, keys in tqdm(sorted(by_shard.items()), desc="Streaming shards", disable=psm.get_global_rank() != 0):
+        with safe_open(path, framework="pt") as handle:
+            for key in keys:
+                if use_ema_bias and key.endswith("moe_mlp.router.expert_bias"):
+                    continue  # filled from expert_bias_ema below
+                value = _read_ep_slice(handle, key, targets[key]).to(device, non_blocking=True)
+                mod_name, _, attr = key.rpartition(".")
+                module = modules.get(mod_name)
+                if isinstance(module, CoreMultiHeadMoE) and attr in ("W_gate", "W_up", "W_down"):
+                    module.load_expert_weight_(attr, value)
+                else:
+                    targets[key].copy_(value)
+                if use_ema_bias and key.endswith("moe_mlp.router.expert_bias_ema"):
+                    targets[key[: -len("_ema")]].copy_(value)
+                    copied_bias += 1
+                del value
+    torch.cuda.synchronize(device)
+    print_rank_0(f"[magi2] Streamed {len(weight_map)} tensors; router bias from EMA: {copied_bias}")
+
+
 def load_magi2_model_state_dict(model: torch.nn.Module, engine_config: EngineConfig) -> Mapping[str, Any]:
     checkpoint_dir = engine_config.load
     if not checkpoint_dir:

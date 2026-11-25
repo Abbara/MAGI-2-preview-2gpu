@@ -1,0 +1,224 @@
+{
+  "global_layer": {
+    "context": "A single continuous wildlife take in a snowy pine forest at dawn.",
+    "description": "A red fox trots across fresh snow from frame left to frame right, pauses to listen, and continues on while its breath steams in the cold air.",
+    "aesthetics": {
+      "style": "naturalistic wildlife documentary cinematography",
+      "contrast": "moderate, with detailed shadows in the tree trunks and clean highlights on the snow",
+      "saturation": "restrained, cool blue landscape with the fox's coat as the one warm accent",
+      "color_scheme": "deep blue dawn shadows and pale cyan snow against the fox's rich orange-red fur",
+      "mood_atmosphere": "quiet, cold, and still"
+    },
+    "audio_baseline": {
+      "ambience": "a quiet winter forest: faint wind high in the pine needles and distant, sparse birdsong",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [
+      {
+        "object_id": "<object 1>",
+        "description": "a small young pine sapling poking out of the snow",
+        "shape_and_color": "a short dark green conical sapling dusted with snow",
+        "texture": "stiff needles with a light powder of snow",
+        "relative_size": "about knee height to the fox",
+        "position": "in the right third of frame, in the foreground snow",
+        "orientation": "upright"
+      }
+    ],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "blue-hour dawn light before sunrise, soft and even, with a brighter sky glowing between the trunks",
+      "direction": "diffuse skylight from above and behind the trees, faint warm glow on the horizon",
+      "shadows": "very soft, low contrast shadows on the snow",
+      "source_consistency": "the dawn light holds the same intensity and color for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "a dense forest of tall straight pine trunks with snow-laden branches, a flat clearing of untouched fresh snow in the foreground"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "an adult red fox",
+        "position": "entering from frame left at mid-ground",
+        "orientation": "in profile, facing frame right",
+        "visual_attributes": {
+          "species": "red fox (Vulpes vulpes)",
+          "age_group": "adult",
+          "facial_features": "white muzzle and chin, amber eyes, tall black-backed ears",
+          "coat": "thick winter coat, deep orange-red on the back and flanks, white chest, black legs",
+          "appearance_details": "full bushy tail with a white tip, a little snow clinging to the paws"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "single continuous slow lateral tracking shot on a stabilized low rig",
+      "default_depth_of_field": "moderately shallow, the fox sharp and the far trunks softly separated",
+      "lens_focal_length": "85mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "The fox trots in from frame left across the fresh snow, then slows and stops near the center, lifting its head to listen.",
+          "active_background": "fine snow crystals drift slowly down past the dark trunks",
+          "camera_delta": {
+            "focus": "held on the fox's head and shoulders",
+            "camera_position": "low, about the height of the fox's back, ten meters away",
+            "composition": "medium-wide shot, fox in the left-center third, trees filling the background",
+            "camera_movement": {
+              "type": "tracking",
+              "direction": "lateral, left to right, matching the fox",
+              "intensity": "slow and smooth"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "moving from the left third toward frame center",
+              "relative_size": "the fox spans about a quarter of the frame width",
+              "orientation": "profile, facing frame right"
+            },
+            "action": {
+              "primary_action": "trotting through the snow, then stopping to listen",
+              "body_configuration": "diagonal trotting gait, back level, tail held out straight behind",
+              "motion_detail": "each paw sinks a few centimeters into the powder and lifts a small spray of snow; on stopping, the head lifts and both ears swivel forward",
+              "interaction": "leaves a neat single line of paw prints in the fresh snow",
+              "facial_expression": "alert, eyes fixed ahead, a puff of breath steam leaving the muzzle"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:03.8-00:05.0",
+            "trigger": "the fox stops and exhales",
+            "effect_outcome": "a small cloud of breath steam blooms in front of its muzzle and drifts away",
+            "physics": "the warm breath condenses in the cold air and disperses slowly"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "quiet forest wind and distant birdsong under the footsteps"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.4-00:03.8",
+              "sound_description": "soft, rhythmic crunching footsteps in fresh powder snow, one crunch per paw strike",
+              "visual_sync": "each crunch matches a paw landing in the snow"
+            },
+            {
+              "timestamp": "00:04.2",
+              "sound_description": "a short, quiet huff of breath from the fox",
+              "visual_sync": "matches the breath steam leaving the muzzle"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "A bird calls in the distance; the fox turns its head toward the sound for a moment, then trots on past the sapling toward frame right.",
+          "active_background": "snow keeps drifting down; a small clump of snow slides off a high branch in the background",
+          "camera_delta": {
+            "focus": "held on the fox",
+            "camera_position": "low, about the height of the fox's back",
+            "composition": "medium-wide shot, fox moving from center toward the right third, the sapling in the right foreground",
+            "camera_movement": {
+              "type": "tracking",
+              "direction": "lateral, left to right",
+              "intensity": "slow and smooth"
+            }
+          }
+        },
+        "objects": [
+          {
+            "object_id": "<object 1>",
+            "timestamp": "00:07.5-00:10.0",
+            "number_of_objects": 1,
+            "dynamic_state": {
+              "state_change": "the fox's tail brushes the sapling as it passes",
+              "motion_detail": "the sapling sways once and sheds a light puff of snow"
+            },
+            "spatial_position": {
+              "location": "right third, foreground",
+              "relative_size": "small",
+              "orientation": "upright"
+            }
+          }
+        ],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "from frame center toward the right third",
+              "relative_size": "the fox spans about a quarter of the frame width",
+              "orientation": "profile facing right, head briefly turned toward camera"
+            },
+            "action": {
+              "primary_action": "glancing toward a distant bird call, then trotting on",
+              "body_configuration": "head turns over the shoulder, then the body resumes a level trotting gait",
+              "motion_detail": "ears flick toward the sound, the head swings back, paws resume a steady rhythm through the powder",
+              "interaction": "tail brushes the sapling in passing",
+              "facial_expression": "curious, then focused ahead, breath steaming with every few strides"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 2",
+            "timestamp_range": "00:07.5-00:08.5",
+            "trigger": "the fox's tail brushes the sapling",
+            "effect_outcome": "the sapling sways and drops a light puff of snow",
+            "physics": "loose powder slides off the needles and falls straight down"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "the forest wind rises slightly; birdsong remains distant"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:05.2",
+              "sound_description": "a clear, distant bird call echoing through the trees",
+              "visual_sync": "the fox's ears flick toward the sound"
+            },
+            {
+              "timestamp": "00:06.0-00:10.0",
+              "sound_description": "soft rhythmic crunching footsteps in powder snow resume",
+              "visual_sync": "each crunch matches a paw landing"
+            },
+            {
+              "timestamp": "00:07.8",
+              "sound_description": "a light rustle of needles and a soft patter of falling snow",
+              "visual_sync": "matches the sapling sway"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

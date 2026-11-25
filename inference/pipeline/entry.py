@@ -152,6 +152,19 @@ def main():
 
     config = load_config(args.config or preset["config"])
     config.engine_config.seed = args.seed
+    # Local quality-testing overrides (the JSON config otherwise wins over the
+    # VG/AG defaults in magi2_config.py).
+    ev = config.evaluation_config
+    if os.environ.get("MAGI2_VG"):
+        ev.video_txt_guidance_scale = float(os.environ["MAGI2_VG"])
+    if os.environ.get("MAGI2_AG"):
+        ev.audio_txt_guidance_scale = float(os.environ["MAGI2_AG"])
+    if os.environ.get("MAGI2_TURBO_VAE") in ("0", "1"):
+        ev.use_turbo_vae = os.environ["MAGI2_TURBO_VAE"] == "1"
+    print_rank_0(
+        f"[magi2] guidance video={ev.video_txt_guidance_scale} audio={ev.audio_txt_guidance_scale} "
+        f"turbo_vae={ev.use_turbo_vae}"
+    )
     if os.environ.get("MAGI2_DETERMINISTIC", "0") == "1" or getattr(args, "deterministic", False):
         _enable_deterministic(config.engine_config.seed)
 

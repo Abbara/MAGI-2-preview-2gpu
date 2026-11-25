@@ -1,212 +1,408 @@
-![magi-logo](https://raw.githubusercontent.com/SandAI-org/MAGI-1/main/figures/logo_black.png)
+# MAGI-2-preview on 2× RTX PRO 6000 Blackwell
+
+A port of [Sand AI's MAGI-2-preview](https://github.com/SandAI-org/MAGI-2-preview) that runs on a
+**single workstation with two 96 GB Blackwell GPUs** instead of the reference 8× H100/H200.
+It generates 10-second clips with synchronized sound, from text or from text + image, at
+896×512 (540p) or 1920×1088 (1080p).
+
+MAGI-2-preview is a 114B-parameter mixture-of-experts audio-video model (6B active per token).
+The upstream code needs FA3 and MagiAttention kernels that exist only for Hopper (sm_90), and it
+assumes 8 GPUs with 80 GB each plus enough host RAM to park whole models.
+This fork changes the parts that block other hardware and leaves the model and sampling the same.
+
+The original upstream README (model description, prompt-enhancement details) is kept at
+[`docs/UPSTREAM_README.md`](docs/UPSTREAM_README.md).
 
 ---
 
-<p align="center">
-  <a href="https://sand.ai"><img alt="Sand.ai Homepage" src="https://img.shields.io/badge/Sand.ai-Homepage-333333.svg?logo=data:image/svg%2bxml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDgwMCA4MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMjI3IDIyNS4wODVDMjI3IDIwMi4zMDMgMjI3IDE5MC45MTIgMjMxLjQzNyAxODIuMjExQzIzNS4zMzkgMTc0LjU1NyAyNDEuNTY2IDE2OC4zMzQgMjQ5LjIyNiAxNjQuNDM0QzI1Ny45MzMgMTYwIDI2OS4zMzIgMTYwIDI5Mi4xMjkgMTYwSDUwNy44NzFDNTA5LjI5NSAxNjAgNTEwLjY3NiAxNjAgNTEyLjAxNCAxNjAuMDAxQzUzMi4wODIgMTYwLjAxNyA1NDIuNjExIDE2MC4yNzcgNTUwLjc3NCAxNjQuNDM0QzU1OC40MzQgMTY4LjMzNCA1NjQuNjYxIDE3NC41NTcgNTY4LjU2MyAxODIuMjExQzU3MyAxOTAuOTEyIDU3MyAyMDIuMzAzIDU3MyAyMjUuMDg1VjI1Ni41NThDNTczIDI5MS4zMTkgNTczIDMwOC43IDU2NS4wMzUgMzIzLjI3OUM1NTguNzU2IDMzNC43NzIgNTQzLjU2NSAzNDYuMTEgNTIzLjA3OCAzNTkuNjA1QzUxNC42NzQgMzY1LjE0MSA1MTAuNDcyIDM2Ny45MDkgNTA1LjYzOSAzNjcuOTM2QzUwMC44MDYgMzY3Ljk2NCA0OTYuNTAzIDM2NS4yIDQ4Ny44OTYgMzU5LjY3MUw0ODcuODk2IDM1OS42N0w0NjYuNDY5IDM0NS45MDVDNDU2Ljg3NSAzMzkuNzQyIDQ1Mi4wNzggMzM2LjY2IDQ1Mi4wNzggMzMyLjIxOEM0NTIuMDc4IDMyNy43NzcgNDU2Ljg3NSAzMjQuNjk1IDQ2Ni40NjkgMzE4LjUzMUw1MjYuNzgyIDI3OS43ODVDNTM1LjI5MSAyNzQuMzE5IDU0MC40MzUgMjY0LjkwMyA1NDAuNDM1IDI1NC43OTRDNTQwLjQzNSAyMzguMzg2IDUyNy4xMjUgMjI1LjA4NSA1MTAuNzA1IDIyNS4wODVIMjg5LjI5NUMyNzIuODc1IDIyNS4wODUgMjU5LjU2NSAyMzguMzg2IDI1OS41NjUgMjU0Ljc5NEMyNTkuNTY1IDI2NC45MDMgMjY0LjcwOSAyNzQuMzE5IDI3My4yMTggMjc5Ljc4NUw1MTMuMTggNDMzLjk0MUM1NDIuNDQxIDQ1Mi43MzggNTU3LjA3MSA0NjIuMTM3IDU2NS4wMzUgNDc2LjcxNkM1NzMgNDkxLjI5NCA1NzMgNTA4LjY3NSA1NzMgNTQzLjQzNlY1NzQuOTE1QzU3MyA1OTcuNjk3IDU3MyA2MDkuMDg4IDU2OC41NjMgNjE3Ljc4OUM1NjQuNjYxIDYyNS40NDQgNTU4LjQzNCA2MzEuNjY2IDU1MC43NzQgNjM1LjU2NkM1NDIuMDY3IDY0MCA1MzAuNjY4IDY0MCA1MDcuODcxIDY0MEgyOTIuMTI5QzI2OS4zMzIgNjQwIDI1Ny45MzMgNjQwIDI0OS4yMjYgNjM1LjU2NkMyNDEuNTY2IDYzMS42NjYgMjM1LjMzOSA2MjUuNDQ0IDIzMS40MzcgNjE3Ljc4OUMyMjcgNjA5LjA4OCAyMjcgNTk3LjY5NyAyMjcgNTc0LjkxNVY1NDMuNDM2QzIyNyA1MDguNjc1IDIyNyA0OTEuMjk0IDIzNC45NjUgNDc2LjcxNkMyNDEuMjQ0IDQ2NS4yMjIgMjU2LjQzMyA0NTMuODg2IDI3Ni45MTggNDQwLjM5MkMyODUuMzIyIDQzNC44NTYgMjg5LjUyNSA0MzIuMDg4IDI5NC4zNTcgNDMyLjA2QzI5OS4xOSA0MzIuMDMyIDMwMy40OTQgNDM0Ljc5NyAzMTIuMSA0NDAuMzI2TDMzMy41MjcgNDU0LjA5MUMzNDMuMTIyIDQ2MC4yNTQgMzQ3LjkxOSA0NjMuMzM2IDM0Ny45MTkgNDY3Ljc3OEMzNDcuOTE5IDQ3Mi4yMiAzNDMuMTIyIDQ3NS4zMDEgMzMzLjUyOCA0ODEuNDY1TDMzMy41MjcgNDgxLjQ2NUwyNzMuMjIgNTIwLjIwOEMyNjQuNzA5IDUyNS42NzUgMjU5LjU2NSA1MzUuMDkxIDI1OS41NjUgNTQ1LjIwMkMyNTkuNTY1IDU2MS42MTIgMjcyLjg3NyA1NzQuOTE1IDI4OS4yOTkgNTc0LjkxNUg1MTAuNzAxQzUyNy4xMjMgNTc0LjkxNSA1NDAuNDM1IDU2MS42MTIgNTQwLjQzNSA1NDUuMjAyQzU0MC40MzUgNTM1LjA5MSA1MzUuMjkxIDUyNS42NzUgNTI2Ljc4IDUyMC4yMDhMMjg2LjgyIDM2Ni4wNTNDMjU3LjU2IDM0Ny4yNTYgMjQyLjkyOSAzMzcuODU3IDIzNC45NjUgMzIzLjI3OUMyMjcgMzA4LjcgMjI3IDI5MS4zMTkgMjI3IDI1Ni41NThWMjI1LjA4NVoiIGZpbGw9IiNGRkZGRkYiLz4KPC9zdmc+Cg=="></a>
-  <a href="https://sand.ai/blog/magi-2-preview"><img alt="Tech Blog" src="https://img.shields.io/badge/Tech%20Blog-MAGI--2%20Preview-333333"></a>
-  <a href="https://huggingface.co/sand-ai/MAGI-2-preview"><img alt="Hugging Face" src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-MAGI--2%20Preview-ffc107"></a>
-  <a href="https://x.com/SandAI_HQ"><img alt="Twitter Follow"
-    src="https://img.shields.io/badge/Twitter-Sand.ai-white?logo=x&logoColor=white"/></a>
-  <a href="LICENSE"><img alt="Apache 2.0 License" src="https://img.shields.io/badge/License-Apache%202.0-green?logo=apache"></a>
-</p>
+## Contents
 
-# MAGI-2 Preview
+- [What's different from upstream](#whats-different-from-upstream)
+- [Requirements](#requirements)
+- [Setup](#setup)
+  - [1. Clone](#1-clone)
+  - [2. Docker image](#2-docker-image)
+  - [3. Model weights (~307 GB)](#3-model-weights-307-gb)
+  - [4. Smoke test (no weights needed)](#4-smoke-test-no-weights-needed)
+- [Generating videos](#generating-videos)
+  - [Text-to-video](#text-to-video)
+  - [Image + text to video](#image--text-to-video)
+  - [Prompts: why structure matters](#prompts-why-structure-matters)
+  - [Draft at 540p, finish at 1080p](#draft-at-540p-finish-at-1080p)
+  - [Options](#options)
+- [Performance](#performance)
+- [How it fits in 2× 96 GB](#how-it-fits-in-2-96-gb)
+- [Troubleshooting](#troubleshooting)
+- [Limitations](#limitations)
+- [Repository layout](#repository-layout)
+- [Licenses and credits](#licenses-and-credits)
 
-Magi-2 Preview is a 114B-parameter unified audio-video generation model that
-activates just 6B parameters per token. Built on MagiMoE and co-designed across
-architecture, systems, and data, it explores an efficient path to scaling video
-generation. The architecture, the training system built around it, and the data
-pipeline are described in [MAGI-2 Preview: Scaling Video Generation Models
-Efficiently](https://sand.ai/blog/magi-2-preview); the weights are on Hugging
-Face at [sand-ai/MAGI-2-preview](https://huggingface.co/sand-ai/MAGI-2-preview).
+---
 
-This repository is the inference code. It generates video from a text prompt
-(T2V) or from a prompt plus a still image (I2V), with sound generated alongside
-the video and muxed into the output file. Clips are 10 seconds long, which is
-the only duration the model currently supports. Generation runs in two stages:
-`magi2_preview` denoises the clip at low resolution, and `magi2_refiner` takes
-that result up to 1080p.
+## What's different from upstream
+
+| Area | Upstream | This fork | Where |
+|---|---|---|---|
+| Main-model attention | FA3 (Hopper only) | FA2 with the same sink correction on non-Hopper GPUs; FA3 is still used on Hopper. Matches a reference to 0.0017 max abs error | `inference/model/magi2_preview.py` |
+| Refiner attention | MagiAttention FFA (sm_90 only). Its fallback made ~390k FA2 calls per layer at 1080p, so one step took over 40 min | Block-sparse PyTorch `flex_attention`, with the mask built once per clip from the same (q, k) range pairs. Exact (0.0004 max abs error); 0.66 s per attention call | `inference/model/flex_block_attn.py`, `magi2_refiner.py` |
+| Hopper detection | `major >= 9`, which sent Blackwell to sm_90-only kernels | `major == 9` | `magi2_refiner.py` |
+| MoE expert weights | bf16, ~217 GB in total | **FP8 (e4m3)** with a per-(expert, output-channel) scale, converted back to bf16 one layer at a time. Expert memory is halved | `magi2_preview.py` (`MAGI2_MOE_FP8`) |
+| Weight loading | Build on CPU, then load the whole state dict into RAM | Build on the GPU and stream tensor by tensor from disk, quantizing on the GPU. Loads 228 GB in ~35 s and never needs it in RAM | `inference/infra/checkpoint/` |
+| MoE Triton tiles | Need 120 KB shared memory per block | Smaller tiles for sm_120 (99 KB limit), ~195 TFLOP/s | `inference/flash_mh_moe/triton/mh_moe_fwd.py` |
+| 1080p memory | Park models in host RAM between stages | Free the preview's expert weights (~51 GB/GPU) while the refiner runs, then re-stream them for the next clip | `inference_engine.py` (`MAGI2_PREVIEW_RELEASE_EXPERTS`) |
+| Parallelism | cp = ep = 8 | cp = ep = 2 | `configs/local/` |
+| Video decoder | Turbo (distilled) decoder only; the full Wan2.2 decode path was removed | Turbo by default; full Wan2.2 decode restored as an option | `inference/model/vae2_2.py` (`MAGI2_TURBO_VAE=0`) |
+| Workflow | – | Save 540p previews and finish them at 1080p later; guidance overrides; a fake text encoder for smoke tests; one launcher script | `scripts/`, `inference_engine.py`, `entry.py` |
+
+The sampler, schedulers, configs (apart from the parallel sizes) and default hyper-parameters are the same as upstream.
+
+---
 
 ## Requirements
 
-- NVIDIA Hopper GPUs, 8 of them.
-- Python 3.12 and a recent CUDA toolkit.
-- `ffmpeg` on `PATH`, to mux the audio track. Without it the video is still
-  written, just silently.
+**Tested on:** 2× NVIDIA RTX PRO 6000 Blackwell Workstation Edition (96 GB, sm_120), AMD Threadripper
+PRO 9955WX (16 cores), 122 GB RAM, NVMe SSD, Ubuntu with driver 595.99, Docker + NVIDIA Container Toolkit.
+
+| Resource | Needed | Why |
+|---|---|---|
+| GPUs | 2 × ≥ 96 GB | ~65 GB of weights per GPU after FP8, plus activations (peak ~88 GB) |
+| GPU architecture | Blackwell (sm_100/sm_120) or Hopper | Other architectures are untested (FA2 and flex_attention exist for sm_80+, but the MoE tile sizes are tuned for these) |
+| System RAM | ~90 GB free (≥ 128 GB total recommended) | The 27B text encoder runs **on the CPU** (~56 GB), plus refiner CPU copies (2 × 14 GB) |
+| CPU | Many cores help | Text encoding runs on the CPU once per prompt |
+| Disk | ~307 GB for weights + ~42 GB for the Docker image (12.7 GB download) | Fast NVMe recommended: experts are re-streamed between 1080p clips |
+| Software | Linux, Docker, [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html), NVIDIA driver with CUDA 13 support (≥ 580), Python 3 on the host, `pip install -U "huggingface_hub[cli]"` | Everything else is inside the upstream Docker image |
+
+Close other GPU-heavy apps first. For example, ComfyUI keeps unloaded models in system RAM, ~60 GB in our case.
+
+---
 
 ## Setup
 
-### Docker
-
-The published image, [sandai/magi-2-preview](https://hub.docker.com/r/sandai/magi-2-preview),
-already has the dependencies built, including the ones that need a compiler:
+### 1. Clone
 
 ```bash
-docker pull sandai/magi-2-preview:latest
-docker run --gpus all -it -v /path/to/ckpt:/workspace/ckpt sandai/magi-2-preview:latest
+git clone <this-repo-url> MAGI-2-Preview/code
+cd MAGI-2-Preview/code
 ```
 
-There is a tag per commit as well, `sandai/magi-2-preview:<commit>`. Name that
-one when reporting a result, because `latest` moves; the image also records what
-it was built from in `/etc/magi2-build-info`.
+By default the scripts expect this layout, with the weights **next to** the repo rather than inside it:
 
-Building it yourself is only necessary to change a dependency version, or to
-work somewhere the registry is not reachable:
+```
+MAGI-2-Preview/
+├── code/     ← this repository
+├── ckpt/     ← model weights (scripts/download_weights.sh)
+└── cache/    ← compile caches + logs (created automatically)
+```
+
+To put the weights elsewhere, set `MAGI2_CKPT_ROOT_HOST=/path/to/ckpt` for both the download and the run scripts.
+
+### 2. Docker image
+
+All Python dependencies (PyTorch 2.9 / CUDA 13, FA2, Triton, MagiCompiler, ffmpeg, …) come from the
+upstream image. The code is **not** baked into it; the launcher mounts this repo at run time.
 
 ```bash
-docker build -t magi-2-preview:local .
+docker pull sandai/magi-2-preview:latest      # 12.7 GB download, 41.7 GB on disk
 ```
 
-### From source
+This fork was tested against image digest
+`sha256:a81785240796338b9552bade5e62721aabace4a80dd1b30a9bdaa2651821b020` (build `2712106`, 2026-08-05).
+To pin exactly that build:
 
 ```bash
-pip install -r requirements.txt
+docker pull sandai/magi-2-preview@sha256:a81785240796338b9552bade5e62721aabace4a80dd1b30a9bdaa2651821b020
+export MAGI2_IMAGE=sandai/magi-2-preview@sha256:a81785240796338b9552bade5e62721aabace4a80dd1b30a9bdaa2651821b020
 ```
 
-MAGI-2 also needs [MagiAttention](https://github.com/SandAI-org/MagiAttention)
-and [MagiCompiler](https://github.com/SandAI-org/MagiCompiler). The pinned
-revisions are recorded as build args in the [Dockerfile](Dockerfile).
+### 3. Model weights (~307 GB)
 
-## Checkpoints
-
-Neither transformer has been step-distilled, so the denoising step count is
-where most of the wall-clock time goes. That is the difference between the
-release that exists today and the one that follows:
-
-| Release | Denoising steps | Weights |
-| --- | --- | --- |
-| MAGI-2 Preview, base | 100 preview + 5 refiner | [sand-ai/MAGI-2-preview](https://huggingface.co/sand-ai/MAGI-2-preview) |
-| MAGI-2 Preview, distilled | far fewer | Coming soon |
-
-Everything the base model loads lives in that one repository, roughly 307 GB in
-total. Weights are not bundled with the code; download them into `ckpt/` in the
-repository root, which is gitignored:
+Weights are **not** stored in this repository. They come from the Hugging Face repo
+[`sand-ai/MAGI-2-preview`](https://huggingface.co/sand-ai/MAGI-2-preview), pinned to revision
+`2dea51b64db47ee5b4402d36fd90829a0c58913b` (the version this fork was tested with):
 
 ```bash
-pip install huggingface_hub
-hf download sand-ai/MAGI-2-preview --local-dir ckpt
+pip install -U "huggingface_hub[cli]"
+scripts/download_weights.sh                 # all components into ../ckpt, then verify
 ```
 
-The directory names in that repository are the ones the configs already expect,
-so nothing needs renaming afterwards:
+| Component | Size | What it is | Original source |
+|---|---|---|---|
+| `preview/` | 228.1 GB (56 shards) | MAGI-2 preview DiT, 114B MoE: generates video + audio at 540p | Sand AI |
+| `text_encoder/` | 55.6 GB (11 shards) | Qwen3.5-27B, used as the text encoder | [Qwen/Qwen3.5-27B](https://huggingface.co/Qwen/Qwen3.5-27B) |
+| `refiner/` | 13.5 GB (3 shards) | MAGI-2 refiner: 540p → 1080p, 12.5 → 25 fps | Sand AI |
+| `stable-audio-open-1.0/` | 4.9 GB | Audio VAE that decodes the generated audio latents | Stability AI, Stable Audio Open 1.0 |
+| `vae/` | 2.8 GB | Wan2.2 video VAE (encoder for image input; optional full decoder) | [Wan-AI/Wan2.2-TI2V-5B](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B) |
+| `turbo_vae/` | 1.9 GB | Distilled fast video decoder (default) | Sand AI |
 
-```
-ckpt/
-├── preview/                            # preview stage: 56 safetensors shards + index
-├── refiner/                            # refiner stage: 3 shards + index
-├── text_encoder/                       # text encoder
-├── vae/                                # video VAE
-│   └── Wan2.2_VAE.pth
-├── stable-audio-open-1.0/              # audio VAE
-└── turbo_vae/                          # fast VAE decoder
-    ├── TurboV3-Wan22-TinyShallow_7_7.json
-    └── checkpoint.ckpt
-```
+All six are mirrored in the single `sand-ai/MAGI-2-preview` repo, so one download covers everything.
 
-Each directory name below links to the folder it comes from in the Hugging Face
-repository:
-
-| Directory | Size | Contents |
-| --- | --- | --- |
-| [`preview`](https://huggingface.co/sand-ai/MAGI-2-preview/tree/main/preview) | 228 GB | Preview-stage transformer, released with MAGI-2 |
-| [`text_encoder`](https://huggingface.co/sand-ai/MAGI-2-preview/tree/main/text_encoder) | 56 GB | Text encoder, [Qwen/Qwen3.5-27B](https://huggingface.co/Qwen/Qwen3.5-27B) |
-| [`refiner`](https://huggingface.co/sand-ai/MAGI-2-preview/tree/main/refiner) | 14 GB | Refiner-stage transformer, released with MAGI-2 |
-| [`stable-audio-open-1.0`](https://huggingface.co/sand-ai/MAGI-2-preview/tree/main/stable-audio-open-1.0) | 5 GB | Audio VAE, decodes the generated audio latents |
-| [`vae`](https://huggingface.co/sand-ai/MAGI-2-preview/tree/main/vae) | 3 GB | Video VAE, from [Wan-AI/Wan2.2-TI2V-5B](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B) |
-| [`turbo_vae`](https://huggingface.co/sand-ai/MAGI-2-preview/tree/main/turbo_vae) | 2 GB | Distilled VAE decoder, used for decoding by default |
-
-The configs under [`configs/`](configs) reference these as
-`${MAGI2_CKPT_ROOT}/<name>`, and that variable defaults to `<repo>/ckpt`. To keep
-weights somewhere else, point it at them rather than editing the configs:
+**Useful variants**
 
 ```bash
-export MAGI2_CKPT_ROOT=/data/magi2-weights
+scripts/download_weights.sh --only vae,turbo_vae,stable-audio-open-1.0   # ~10 GB: enough for the smoke test
+scripts/download_weights.sh --dest /data/magi2-ckpt                      # custom location (then export MAGI2_CKPT_ROOT_HOST)
+scripts/download_weights.sh --sha256                                     # also SHA-256-verify every file (slow)
+python3 scripts/verify_weights.py --ckpt ../ckpt                         # verify an existing download only
 ```
 
-## Prompt enhancement
+The download resumes when re-run. Verification checks every file against the Hub listing for the
+pinned revision: presence, exact size, and an intact safetensors layout (with `--sha256`, a full hash).
 
-The captions the model was trained on are long and structured, so a short hand-
-written prompt underuses it. The pipeline can optionally rewrite the input
-through a prompt-enhancement (PE) step before encoding:
-
-- text-to-video uses [`inference/prompt_enhancement/prompts/t2v.md`](inference/prompt_enhancement/prompts/t2v.md)
-- image-to-video (when a first-frame image is provided) uses
-  [`inference/prompt_enhancement/prompts/i2v.md`](inference/prompt_enhancement/prompts/i2v.md)
-
-Both templates ask an instruction-following LLM for a structured JSON caption of
-the 10-second clip; the result is then rendered to readable Markdown and passed
-downstream. The reference client in
-[`inference/prompt_enhancement/`](inference/prompt_enhancement/) talks to an
-OpenAI-compatible endpoint — set `API_KEY` in
-[`enhancer.py`](inference/prompt_enhancement/enhancer.py) to enable it, or
-subclass `LLMClient` for your own provider. Leave `API_KEY` empty to skip PE and
-use the raw prompt as-is.
-
-[`assets/`](assets) ships example prompts that are already PE-enhanced
-(`sample_000.txt` and `sample_002.txt`). You can still generate without running
-PE — leave `API_KEY` empty and pass any prompt you like.
-
-## Running inference
-
-[`scripts/run_demo.sh`](scripts/run_demo.sh) launches
-[`inference/pipeline/entry.py`](inference/pipeline/entry.py) under `torchrun` on
-every visible GPU. It generates at 1080p, with seed 42 and the batch in
-[`assets/demo_samples.json`](assets/demo_samples.json):
+**Doing it by hand** (equivalent):
 
 ```bash
-bash scripts/run_demo.sh
-SAMPLES=my_samples.json bash scripts/run_demo.sh   # a different batch
-OUTPUT_DIR=output/run7 bash scripts/run_demo.sh
+hf download sand-ai/MAGI-2-preview \
+  --revision 2dea51b64db47ee5b4402d36fd90829a0c58913b \
+  --local-dir ../ckpt \
+  --include "preview/*" "refiner/*" "text_encoder/*" "vae/*" "turbo_vae/*" "stable-audio-open-1.0/*"
 ```
 
-The script takes `SAMPLES`, `OUTPUT_DIR`, `SEED` and `MASTER_PORT` from the
-environment. Videos land in `$OUTPUT_DIR/sample_000.mp4` and up, numbered by
-position in the batch.
+On a fast connection the full set took about 25 minutes. For faster downloads, `pip install hf_transfer`
+and `export HF_HUB_ENABLE_HF_TRANSFER=1`. If the Hub ever requires it, log in with `hf auth login` or set `HF_TOKEN`.
 
-A samples file is a JSON array with one entry per video. An entry carries its
-prompt inline as `prompt` or as a path in `prompt_file`, and a first frame in
-`image`; leaving `image` out makes it a T2V entry. The shipped batch runs the
-three stills in `assets/` as I2V, the same three prompts again as T2V, and
-`assets/sample_enhanced_t2v.json`.
+### 4. Smoke test (no weights needed)
 
-For a single clip, call the entry point directly:
+Before or during the big download, check that the GPUs, kernels and multi-GPU setup work. This uses
+synthetic preview/refiner weights and a fake text encoder, and only needs the ~10 GB set above:
 
 ```bash
-torchrun --nproc_per_node=8 inference/pipeline/entry.py \
-    --prompt "a red fox in snow" --output output/
+SKIP_LOAD_MODEL=1 MAGI2_FAKE_TEXT_ENCODER=1 \
+  scripts/run_local_2gpu.sh --resolution 540p --num-inference-steps 2
 ```
 
-It also takes `--prompt-file`, `--image`, `--seed`, `--config`, `--output-width`
-/ `--output-height`, `--num-inference-steps`, `--refiner-num-inference-steps`
-and `--deterministic`. Of these only `--seed`, `--samples` and `--output` are
-reachable through `run_demo.sh`.
+It should finish in about 5 minutes and write a noise video, with sound, to `output/runs/<timestamp>/sample_000.mp4`.
+If it hangs at the first step, see [NCCL hangs](#nccl-hangs-on-the-first-collective-one-gpu-at-100-the-other-idle).
 
-1080p runs [`configs/magi2_refiner.json`](configs/magi2_refiner.json): the
-preview stage generates 512x896 and the refiner takes that to 1088x1920.
-`magi2_refiner.json` extends
-[`magi2_preview.json`](configs/magi2_preview.json) and carries only what the
-refiner stage adds, so a shared setting is edited in one place.
+---
 
-1080p is a delivery tier, not the shape that gets generated. The VAE stride
-constrains every generated dimension to a multiple of 16, so the tier generates
-1088 wide rather than 1080, and the video is written at that generated shape.
-Pass `--output-width` and `--output-height` to have the finished video rescaled
-to an exact size, 1080x1920 the way the reference delivers the tier.
+## Generating videos
 
-Four environment variables decide where each large component sits between
-phases: `MAGI2_TEXT_ENC_OFFLOAD_MODE`, `MAGI2_PREVIEW_OFFLOAD_MODE`,
-`MAGI2_REFINER_OFFLOAD_MODE` and `MAGI2_VAE_OFFLOAD_MODE`, each one of `cpu`,
-`gpu` or `roundtrip`. The preview and the refiner default to `roundtrip`, staged
-in and out around the stage that needs them, because at 1080p neither fits on an
-80GB card next to the other's activations.
+Everything goes through `scripts/run_local_2gpu.sh`, which starts the Docker image on both GPUs.
+Each run writes to `output/runs/<timestamp>/` (or `--output <dir>`), one `sample_NNN.mp4` per prompt.
+**Paths you pass (prompt files, images, output dirs) must be inside the repo**, because only the repo is
+mounted in the container. Give them relative to the repo root.
 
-Decoding uses the distilled turbo decoder from `ckpt/turbo_vae`, a temporal
-sliding window that runs on one rank per video. `MAGI2_DETERMINISTIC=1`, or
-`--deterministic`, makes the MoE scatter and the attention kernels bit-exact at
-some cost in speed. `MAGI2_SAVE_LATENT_PATH` writes the post-refiner latent of
-each sample to that directory.
+### Text-to-video
 
-## License
+```bash
+# 540p (896×512, 12.5 fps): ~30 min
+scripts/run_local_2gpu.sh --resolution 540p --prompt-file prompts/fox_structured.json
 
-Apache 2.0. See [LICENSE](LICENSE).
+# 1080p (1920×1088, 25 fps): ~40-45 min
+scripts/run_local_2gpu.sh --resolution 1080p --prompt-file prompts/fox_structured.json
+
+# Several prompts in one run (the model loads once)
+scripts/run_local_2gpu.sh --resolution 540p --prompt "first prompt" "second prompt"
+
+# Different seed (the default is 42; consecutive prompts use seed, seed+1, …)
+scripts/run_local_2gpu.sh --resolution 540p --seed 7 --prompt-file prompts/fox_structured.json
+```
+
+Clips are always 10 seconds long; that's the only duration the model supports.
+
+### Image + text to video
+
+Put the image somewhere inside the repo (e.g. `inputs/`) and refer to it as `<Figure 1>` in the prompt.
+The tag is added automatically if missing:
+
+```bash
+mkdir -p inputs && cp ~/photo.jpg inputs/
+scripts/run_local_2gpu.sh --resolution 1080p \
+  --image inputs/photo.jpg \
+  --prompt "The woman in <Figure 1> turns toward the camera and smiles."
+```
+
+For a batch of mixed T2V/I2V jobs, use a samples file like [`assets/demo_samples.json`](assets/demo_samples.json):
+`scripts/run_local_2gpu.sh --resolution 1080p --samples assets/demo_samples.json`.
+
+> **Audio input is not supported.** The model generates its own soundtrack (speech, effects,
+> ambience). This release can't lip-sync to a recording you provide.
+
+### Prompts: why structure matters
+
+**This is the single biggest lever on quality, and on audio in particular.** MAGI-2 was trained on
+long, structured captions that describe the scene, subjects, camera, a timeline of actions and a
+timeline of sounds. Short prompts give decent video but under-use the model. In our tests, a
+one-sentence prompt produced a good-looking clip with an **almost silent** soundtrack (−71 dB),
+while a structured caption produced footsteps, wind and breathing at the right moments (−41 dB mean).
+
+You can write prompts in that structure in three ways:
+
+1. **Write the JSON by hand.** Copy [`prompts/fox_structured.json`](prompts/fox_structured.json) or
+   [`assets/sample_enhanced_t2v.json`](assets/sample_enhanced_t2v.json) and edit it. Pass it with
+   `--prompt-file`; JSON is rendered to the model's markdown format automatically. The important audio
+   fields are `audio_baseline.ambience`, per-segment `audio.special_audio_events` (timestamped
+   sounds with `visual_sync`) and `audio.dialogue_lines` (speaker, text, delivery).
+2. **Let an LLM do it (prompt enhancement).** Set `API_KEY` (and optionally `DEFAULT_MODEL`,
+   `DEFAULT_BASE_URL`) in [`inference/prompt_enhancement/enhancer.py`](inference/prompt_enhancement/enhancer.py).
+   Any OpenAI-compatible endpoint works; the default points at Google's Gemini endpoint. Short
+   prompts are then expanded automatically using the templates in
+   `inference/prompt_enhancement/prompts/`. The container needs network access for this.
+3. **Ask any capable chat model** to fill in the template from your idea, using
+   [`inference/prompt_enhancement/prompts/t2v.md`](inference/prompt_enhancement/prompts/t2v.md)
+   (or `i2v.md`) as the instructions.
+
+### Draft at 540p, finish at 1080p
+
+The 1080p refiner adds detail but doesn't change content, so a cheap workflow is: generate a few
+540p drafts (different seeds or prompt variants), pick the best, and refine only that one. Previews
+can be saved and refined later without regenerating them:
+
+```bash
+# 1) drafts: each saves output/previews/preview_NNN.pt (video+audio latents and text features)
+MAGI2_PREVIEW_CACHE_DIR=output/previews \
+  scripts/run_local_2gpu.sh --resolution 540p --seed 1 --prompt-file prompts/fox_structured.json
+
+# 2) refine the one you like (skips text encoding and the 540p stage)
+MAGI2_PREVIEW_CACHE_LOAD=output/previews/preview_000.pt \
+  scripts/run_local_2gpu.sh --resolution 1080p
+```
+
+The audio track comes from the 540p stage, so a refined clip has the same sound as its draft.
+Step 2 uses the cached text features, so it needs no prompt. It refines one cached preview per run.
+
+### Options
+
+Command-line options (passed through to `inference/pipeline/entry.py`):
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--resolution` | `540p` | `272p`, `540p` (896×512) or `1080p` (1920×1088, uses the refiner) |
+| `--prompt "…" ["…"]` / `--prompt-file f [f]` / `--samples f.json` | – | What to generate (text, files with text or JSON, or a batch file) |
+| `--image img [img]` | – | First-frame / reference image(s) for image-to-video |
+| `--seed` | 42 | Random seed |
+| `--num-inference-steps` | 100 | 540p denoising steps (~17.4 s each) |
+| `--refiner-num-inference-steps` | 5 | 1080p refiner steps |
+| `--output` | `output/runs/<timestamp>` | Output directory (relative to the repo) |
+
+Environment variables read by the launcher:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `MAGI2_VG`, `MAGI2_AG` | 5.0, 7.0 (from config) | Video / audio text-guidance scale |
+| `MAGI2_TURBO_VAE` | 1 | `0` = decode with the full Wan2.2 VAE instead of the distilled turbo decoder |
+| `MAGI2_PREVIEW_CACHE_DIR` / `MAGI2_PREVIEW_CACHE_LOAD` | – | Save 540p previews / refine a saved one (see above) |
+| `MAGI2_CKPT_ROOT_HOST` | `../ckpt` | Host path of the weights |
+| `MAGI2_IMAGE` | `sandai/magi-2-preview:latest` | Docker image |
+| `MAGI2_MOE_FP8` | 1 | FP8 expert storage. `0` (bf16) does **not** fit on 2 × 96 GB |
+| `MAGI2_PREVIEW_RELEASE_EXPERTS` | 1 at 1080p | Free preview experts during the refiner |
+| `MAGI2_TEXT_ENC_OFFLOAD_MODE` | `cpu` | Where the text encoder runs (`cpu` / `gpu` / `roundtrip`) |
+| `NCCL_P2P_DISABLE` | 1 | See [NCCL hangs](#nccl-hangs-on-the-first-collective-one-gpu-at-100-the-other-idle) |
+| `MAGI2_ATTN_BACKEND` | auto | `fa2` / `fa3`: force the main-model attention backend |
+| `MAGI2_REFINER_ATTN` | `flex` | `loop` = upstream's per-range FA2 fallback (very slow; for debugging) |
+| `MAGI2_MOE_BLOCK_CONFIG` | auto | Override MoE Triton tiles: `BLOCK_T,BLOCK_DH,BLOCK_DE,STAGES,WARPS` |
+| `SKIP_LOAD_MODEL`, `MAGI2_FAKE_TEXT_ENCODER` | 0 | Synthetic weights / random text features for smoke tests |
+
+---
+
+## Performance
+
+Measured on the reference machine (2× RTX PRO 6000, 16-core Threadripper, NVMe):
+
+| Stage | Time |
+|---|---|
+| Stream 228 GB of preview weights to both GPUs (FP8-quantizing on the fly) | ~35 s (weights partly in the page cache) |
+| 540p generation, 100 steps | ~29 min (17.4 s/step; the first step includes a ~1-2 min compile) |
+| 1080p refiner (5 steps) + decode | a few minutes |
+| **One 1080p clip, end to end** | **~42 min** |
+| One 540p clip, end to end | ~32 min |
+
+| Memory (per GPU) | |
+|---|---|
+| After loading | 64.5 GB |
+| Peak during 540p denoise | ~82 GB reserved |
+| Refiner stage (preview experts released) | ~30 GB + activations, ~90 GB reserved peak |
+
+---
+
+## How it fits in 2× 96 GB
+
+- **Expert parallelism (ep = 2):** each GPU holds half of the 256 experts in every MoE layer (6 of 12
+  expert heads). The loader reads only that half from disk.
+- **FP8 experts:** expert weights are 217 GB of the 228 GB model. In FP8 with fp32 scales, that's
+  ~54 GB per GPU instead of ~109 GB. Each layer is converted back to bf16 just before its MoE
+  kernel (~7 ms per tensor). On random weights the MoE output differs from bf16 by ~4% relative
+  error. In practice clips show no visible artifacts, but it is an approximation of the original model.
+- **Context parallelism (cp = 2, Ulysses):** the token sequence is split across both GPUs for attention.
+- **Text encoder on CPU:** Qwen3.5-27B runs once per prompt on the CPU, on rank 0 only.
+- **1080p:** the preview and refiner don't fit on the GPU together, and the preview can't be parked
+  in RAM (2 × 65 GB). So after the 540p stage the expert storage is freed (`untyped_storage().resize_(0)`,
+  which keeps the tensors and compiled graphs valid), the refiner runs, and the experts are
+  re-streamed from disk before the next clip.
+
+---
+
+## Troubleshooting
+
+### NCCL hangs on the first collective (one GPU at "100%", the other idle)
+
+Peer-to-peer PCIe transfers between the GPUs silently hang on some workstation platforms, usually
+when the IOMMU is in translated mode. `nvidia-smi topo -p2p r` may still report `OK`. Symptom: after
+10 minutes, `Watchdog caught collective operation timeout … OpType=BROADCAST`. The launcher sets
+`NCCL_P2P_DISABLE=1` (transfers go through host memory, ~28 GB/s, enough for this workload).
+To fix it at the platform level, add `iommu=pt` to the kernel command line (GRUB) and reboot, then
+try `NCCL_P2P_DISABLE=0`. To test NCCL on its own, run a 2-process `all_reduce`, with and without the variable.
+
+### Out of memory
+
+- GPU: make sure nothing else is using the GPUs (`nvidia-smi`). Peak use is ~88 GB of 96 GB.
+- Host RAM: the text encoder needs ~56 GB on the CPU. Stop apps that cache models in RAM (e.g. ComfyUI).
+
+### `OutOfResources: shared memory` in a Triton kernel
+
+Your GPU has less shared memory per block than the tiles assume. Use smaller MoE tiles via
+`MAGI2_MOE_BLOCK_CONFIG` (e.g. `64,64,32,2,4`).
+
+### Silent or near-silent audio
+
+Use a structured prompt (see [Prompts](#prompts-why-structure-matters)). This was the cause in every case we've seen.
+
+### First run is slow to start
+
+Kernels are compiled on first use and cached in `../cache/`. Later runs start faster.
+
+---
+
+## Limitations
+
+- 10-second clips only; fixed resolution presets (272p / 540p / 1080p).
+- No audio input (no lip-sync to a provided voice track).
+- FP8 experts are an approximation of the bf16 model.
+- Tested only on 2× RTX PRO 6000 Blackwell (sm_120). Hopper should take the original FA3 path; other GPUs are untested.
+- Prompt enhancement needs an external LLM API key.
+
+---
+
+## Repository layout
+
+```
+configs/local/2gpu_*.json          cp=2 / ep=2 overlays on the upstream configs
+scripts/run_local_2gpu.sh          launcher (Docker, both GPUs, all env knobs)
+scripts/download_weights.sh        fetch + verify weights (pinned HF revision)
+scripts/verify_weights.py          verify an existing download (size, layout, optional SHA-256)
+scripts/quality_matrix.sh          the prompt / seed / guidance / refiner / decoder comparison we ran
+prompts/fox_structured.json        example structured T2V prompt
+inference/model/flex_block_attn.py block-sparse refiner attention (flex_attention)
+docs/UPSTREAM_README.md            original upstream README
+```
+
+Not in git (see `.gitignore`): weights (`*.safetensors`, `*.pt`, `*.ckpt`, `*.pth`, …), `output*/`,
+generated media, logs and caches.
+
+---
+
+## Licenses and credits
+
+- **Code:** Apache License 2.0 ([`LICENSE`](LICENSE)), as in upstream
+  [SandAI-org/MAGI-2-preview](https://github.com/SandAI-org/MAGI-2-preview), on which this fork is based
+  (commit `f68a0f9`). The modifications listed above are released under the same license.
+- **Weights** are not part of this repository and keep their own licenses. Check each before use,
+  especially for commercial work:
+  - MAGI-2-preview (preview, refiner, turbo decoder): see the
+    [Hugging Face model card](https://huggingface.co/sand-ai/MAGI-2-preview) (Apache 2.0 at the time of writing).
+  - Qwen3.5-27B: see [Qwen/Qwen3.5-27B](https://huggingface.co/Qwen/Qwen3.5-27B).
+  - Wan2.2 VAE: see [Wan-AI/Wan2.2-TI2V-5B](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B).
+  - Stable Audio Open 1.0 (audio VAE): distributed by Stability AI under its own community license; review its terms.
+- Built on [MagiCompiler](https://github.com/SandAI-org/MagiCompiler),
+  [FlashAttention](https://github.com/Dao-AILab/flash-attention), PyTorch `flex_attention` and Triton.
+- Please only generate likenesses of real people with their consent.

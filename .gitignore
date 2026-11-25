@@ -38,3 +38,21 @@ ckpt/
 .DS_Store
 Thumbs.db
 .docker-deps
+
+# --- Local 2-GPU port: keep heavy/generated artifacts out of git ---
+# Weights and checkpoints (fetch with scripts/download_weights.sh)
+*.safetensors
+*.ckpt
+*.pth
+*.pt
+*.bin
+*.gguf
+# Generated media, caches, run logs
+*.mov
+*.webm
+*.png
+!assets/**/*.png
+*.log
+cache/
+# macOS Finder metadata (AppleDouble files on network shares)
+._*

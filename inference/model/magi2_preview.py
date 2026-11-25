@@ -31,12 +31,27 @@ import torch.nn.functional as F
 import triton
 import triton.language as tl
 from einops import rearrange, repeat
-from flash_attn_interface import flash_attn_3_cuda
-from magi_attn_extensions.fa3_interface_with_sink import (
-    FA3VarlenFuncWithSink,
-    fa3_func_with_sink,
-    fa3_varlen_func_with_sink,
+try:  # FA3 kernels exist only for Hopper (sm_90); FA2 is the fallback elsewhere.
+    from flash_attn_interface import flash_attn_3_cuda
+    from magi_attn_extensions.fa3_interface_with_sink import (
+        FA3VarlenFuncWithSink,
+        fa3_func_with_sink,
+        fa3_varlen_func_with_sink,
+    )
+except ImportError:  # pragma: no cover - depends on the installed wheels
+    flash_attn_3_cuda = None
+from magi_attn_extensions.fa2_interface_with_sink import (
+    fa2_func_with_sink,
+    fa2_varlen_func_with_sink,
 )
+
+
+def _use_fa2_attention() -> bool:
+    """FA3 on Hopper, FA2 otherwise; MAGI2_ATTN_BACKEND=fa2|fa3 overrides."""
+    forced = os.environ.get("MAGI2_ATTN_BACKEND", "").strip().lower()
+    if forced in ("fa2", "fa3"):
+        return forced == "fa2"
+    return flash_attn_3_cuda is None or torch.cuda.get_device_capability()[0] != 9
 from magi_compiler import magi_compile, magi_register_custom_op
 from inference.flash_mh_moe import (
     compute_topk_probs_and_indices as _mh_moe_compute_topk,
@@ -2193,7 +2208,34 @@ def _flash_attn_with_sink_impl(
         )
         q, k, v = q.contiguous(), k.contiguous(), v.contiguous()
 
-    if cu_seqlens_q is not None:
+    if _use_fa2_attention():
+        # FA2 treats softcap <= 0 as disabled; config uses -1.0 for "off".
+        fa2_softcap = attn_softcap if attn_softcap > 0 else 0.0
+        if cu_seqlens_q is not None:
+            out = fa2_varlen_func_with_sink(
+                q,
+                k,
+                v,
+                cu_seqlens_q=cu_seqlens_q.contiguous(),
+                cu_seqlens_k=cu_seqlens_k.contiguous(),
+                max_seqlen_q=max_seqlen_q,
+                max_seqlen_k=max_seqlen_k,
+                sink=attn_sinks,
+                sink_layout="sh",
+                softcap=fa2_softcap,
+                deterministic=os.environ.get("MAGI2_DETERMINISTIC", "0") == "1",
+            )
+        else:
+            out = fa2_func_with_sink(
+                q.unsqueeze(0),
+                k.unsqueeze(0),
+                v.unsqueeze(0),
+                sink=attn_sinks,
+                sink_layout="sh",
+                softcap=fa2_softcap,
+                deterministic=os.environ.get("MAGI2_DETERMINISTIC", "0") == "1",
+            ).squeeze(0)
+    elif cu_seqlens_q is not None:
         out = _fa3_varlen_func_with_sink_inference(
             q,
             k,
@@ -2568,6 +2610,32 @@ class CoreMultiHeadMoE(nn.Module):
                 dtype=config.params_dtype,
             )
         )
+        # Optional FP8 expert storage (MAGI2_MOE_FP8=1): weights live as
+        # float8_e4m3fn with a per-(expert, output-channel) fp32 scale and are
+        # dequantized one layer at a time right before the MoE kernel. Halves
+        # the dominant expert footprint (~217GB bf16 across all layers).
+        self.fp8_experts = env_is_true("MAGI2_MOE_FP8")
+        self.compute_dtype = config.params_dtype
+        if self.fp8_experts:
+            for name in ("W_gate", "W_up", "W_down"):
+                bf16 = getattr(self, name)
+                setattr(
+                    self,
+                    name,
+                    nn.Parameter(
+                        torch.empty(bf16.shape, dtype=torch.float8_e4m3fn),
+                        requires_grad=False,
+                    ),
+                )
+                del bf16
+                out_dim = getattr(self, name).shape[-1]
+                self.register_buffer(
+                    f"{name}_scale",
+                    torch.ones(
+                        self.local_flatten_num_experts, 1, out_dim, dtype=torch.float32
+                    ),
+                    persistent=False,
+                )
         self.router = nn.Module()
         self.router.register_buffer(
             "expert_bias",
@@ -2616,10 +2684,60 @@ class CoreMultiHeadMoE(nn.Module):
             gather_ids=gather_ids,
             probs=probs,
             expert_offsets=expert_offsets,
-            W_gate=self.W_gate,
-            W_up=self.W_up,
-            W_down=self.W_down,
+            W_gate=self._expert_weight("W_gate"),
+            W_up=self._expert_weight("W_up"),
+            W_down=self._expert_weight("W_down"),
         )
+
+    def _expert_weight(self, name: str) -> torch.Tensor:
+        weight = getattr(self, name)
+        if not self.fp8_experts:
+            return weight
+        scale = getattr(self, f"{name}_scale")
+        return (weight.to(torch.float32) * scale).to(self.compute_dtype)
+
+    _EXPERT_PARAM_NAMES = ("W_gate", "W_up", "W_down")
+
+    @torch.no_grad()
+    def release_expert_storage_(self) -> int:
+        """Free the GPU memory behind the expert weights, keeping the tensors.
+
+        Storage is resized to zero (the FSDP trick), so Parameter objects and
+        anything holding them (compiled graphs, state_dict views) stay valid;
+        ``restore_expert_storage_`` + a reload brings the bytes back.
+        """
+        freed = 0
+        for name in self._EXPERT_PARAM_NAMES:
+            storage = getattr(self, name).untyped_storage()
+            freed += storage.nbytes()
+            storage.resize_(0)
+        return freed
+
+    @torch.no_grad()
+    def restore_expert_storage_(self) -> None:
+        for name in self._EXPERT_PARAM_NAMES:
+            param = getattr(self, name)
+            param.untyped_storage().resize_(param.numel() * param.element_size())
+
+    def expert_storage_released(self) -> bool:
+        return self.W_gate.untyped_storage().nbytes() == 0
+
+    @torch.no_grad()
+    def load_expert_weight_(self, name: str, value: torch.Tensor) -> None:
+        """Copy a bf16/fp32 expert tensor in, quantizing to FP8 if enabled.
+
+        ``value`` should already be on this module's device; quantization is
+        done per (expert, output-channel), reducing over the input dim (dim 1).
+        """
+        param = getattr(self, name)
+        if not self.fp8_experts:
+            param.copy_(value)
+            return
+        value = value.to(torch.float32)
+        amax = value.abs().amax(dim=1, keepdim=True).clamp_min(1e-12)
+        scale = amax / torch.finfo(torch.float8_e4m3fn).max
+        param.copy_((value / scale).to(torch.float8_e4m3fn))
+        getattr(self, f"{name}_scale").copy_(scale)
 
     def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
         x_heads = x.view(-1, self.num_heads, self.d_head)

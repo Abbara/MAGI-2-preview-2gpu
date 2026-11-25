@@ -9,6 +9,7 @@ Supports deterministic mode (sequential scatter_back) for bit-exact reproducibil
 from __future__ import annotations
 
 import math
+import os
 
 import torch
 import triton
@@ -220,9 +221,18 @@ def _scatter_back(
 # ═══════════════════════════════════════════════════════════════════════════
 
 
+# Picked by benchmarking on RTX PRO 6000 Blackwell (sm_120); see scripts/local notes.
+_SM120_BLOCK_CONFIG = (64, 64, 32, 2, 4)
+
+
 def _select_block_config() -> tuple[int, int, int, int, int]:
     """(BLOCK_T, BLOCK_DH, BLOCK_DE, NUM_STAGES, NUM_WARPS) for d_head=256."""
+    override = os.environ.get("MAGI2_MOE_BLOCK_CONFIG")  # "T,DH,DE,STAGES,WARPS"
+    if override:
+        return tuple(int(v) for v in override.split(","))  # type: ignore[return-value]
     major, _ = torch.cuda.get_device_capability()
+    if major == 12:  # consumer/workstation Blackwell: ~99KB smem per block
+        return _SM120_BLOCK_CONFIG
     if major >= 10:  # Blackwell
         return (128, 64, 32, 2, 8)
     return (128, 64, 32, 2, 8)  # Hopper

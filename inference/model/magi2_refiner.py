@@ -1173,7 +1173,9 @@ def is_hopper_arch() -> bool:
     if not torch.cuda.is_available():
         return False
     major, _ = torch.cuda.get_device_capability()
-    return major >= 9
+    # FA3 / MagiAttention FFA kernels in the image are built for sm_90 only;
+    # Blackwell (sm_100/sm_120) must take the FA2 fallbacks.
+    return major == 9
 
 
 @magi_register_custom_op(
@@ -1321,6 +1323,12 @@ def flex_flash_attn_func(
             query, key, value, q_ranges, k_ranges, attn_type_map, **kwargs
         )
         return output, meta.lse
+    if os.environ.get("MAGI2_REFINER_ATTN", "flex").strip().lower() != "loop":
+        # Block-sparse flex_attention: one kernel instead of one FA2 call per
+        # (q_range, k_range) pair (~390k pairs per layer at 1080p).
+        from inference.model.flex_block_attn import range_flex_attn
+
+        return range_flex_attn(query, key, value, q_ranges, k_ranges)
     return _custom_flex_flash_attn_func(query, key, value, q_ranges, k_ranges)
 
 
@@ -1332,6 +1340,10 @@ def _custom_flex_flash_attn_func(
     k_ranges: torch.Tensor,
     **kwargs,
 ):
+    dump = os.environ.get("MAGI2_DUMP_ATTN_RANGES")
+    if dump and not os.path.exists(dump):
+        torch.save({"q_ranges": q_ranges.cpu(), "k_ranges": k_ranges.cpu(),
+                    "q_shape": tuple(query.shape), "k_shape": tuple(key.shape)}, dump)
     q_ranges, k_range_list = _split_q_range_with_no_overlap(q_ranges, k_ranges)
     return _flash_attn_with_correction(query, key, value, q_ranges, k_range_list)
 

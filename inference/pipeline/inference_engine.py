@@ -15,6 +15,7 @@
 import json
 import os
 import re
+import time
 from dataclasses import dataclass
 from typing import Literal, Optional
 
@@ -392,6 +393,18 @@ class Magi2InferenceEngine:
             special_token = None
         return self.text_embedding_broadcaster.broadcast(special_token)
 
+    def _maybe_reload_preview_experts(self) -> None:
+        """Bring back preview experts released for the previous clip's refiner."""
+        from inference.infra.checkpoint.magi2_checkpointing import reload_preview_experts_
+
+        engine_config = getattr(self.model, "_magi2_engine_config", None)
+        if engine_config is None:
+            return
+        t0 = time.time()
+        if reload_preview_experts_(self.model, engine_config):
+            torch.cuda.synchronize()
+            print_rank_0(f"[magi2] reloaded preview experts in {time.time() - t0:.1f}s")
+
     @torch.inference_mode()
     def evaluate(
         self,
@@ -406,7 +419,20 @@ class Magi2InferenceEngine:
         magi2_refiner_num_inference_steps: Optional[int] = None,
     ):
 
+        cache_load = os.environ.get("MAGI2_PREVIEW_CACHE_LOAD")
+        if cache_load:
+            # Refiner-only run from a saved preview: skip text encoding and the
+            # preview denoise entirely.
+            cached = torch.load(cache_load, map_location=self.device)
+            print_rank_0(f"[magi2] loaded cached preview from {cache_load}")
+            return self._finish_after_preview(
+                cached["latent"], cached["latent_audio"], cached["context"],
+                cached["context_null"], refiner_width, refiner_height,
+                magi2_refiner_num_inference_steps,
+            )
+
         OffloadUtils.maybe_load(self.model, self._preview_mode, self.device)
+        self._maybe_reload_preview_experts()
 
         self.latent_height = (
             preview_height // self.vae_stride[1] // self.patch_size[1] * self.patch_size[1]
@@ -500,6 +526,32 @@ class Magi2InferenceEngine:
         latent, latent_audio = self.sampler.sample(sampler_input)
         print_mem_info_rank_0("[magi2] after preview denoise")
 
+        cache_dir = os.environ.get("MAGI2_PREVIEW_CACHE_DIR")
+        if cache_dir and psm.is_group_first_rank("cp"):
+            os.makedirs(cache_dir, exist_ok=True)
+            self._preview_cache_counter = getattr(self, "_preview_cache_counter", -1) + 1
+            path = os.path.join(cache_dir, f"preview_{self._preview_cache_counter:03d}.pt")
+            torch.save({"latent": latent.cpu(), "latent_audio": latent_audio.cpu(),
+                        "context": context.cpu(), "context_null": context_null.cpu(),
+                        "prompt": prompt, "preview_size": (preview_width, preview_height)}, path)
+            print_rank_0(f"[magi2] saved preview cache to {path}")
+
+        return self._finish_after_preview(
+            latent, latent_audio, context, context_null, refiner_width,
+            refiner_height, magi2_refiner_num_inference_steps,
+        )
+
+    def _finish_after_preview(
+        self,
+        latent: torch.Tensor,
+        latent_audio: torch.Tensor,
+        context: torch.Tensor,
+        context_null: torch.Tensor,
+        refiner_width: Optional[int],
+        refiner_height: Optional[int],
+        magi2_refiner_num_inference_steps: Optional[int],
+    ):
+        """Refiner (optional) + decode, shared by normal and cached-preview runs."""
         OffloadUtils.maybe_offload(self.model, self._preview_mode)
 
         use_magi2_refiner = all(
@@ -510,6 +562,16 @@ class Magi2InferenceEngine:
                 magi2_refiner_num_inference_steps is not None,
             ]
         )
+        if use_magi2_refiner and os.environ.get("MAGI2_PREVIEW_RELEASE_EXPERTS", "0") == "1":
+            # The preview MoE experts dominate GPU memory and cannot be parked in
+            # host RAM on a 2-GPU box; drop them for the refiner and re-stream
+            # them from disk at the start of the next clip.
+            from inference.infra.checkpoint.magi2_checkpointing import release_preview_experts_
+
+            freed = release_preview_experts_(self.model)
+            torch.cuda.empty_cache()
+            print_rank_0(f"[magi2] released preview experts for refiner: {freed / 2**30:.1f} GiB/rank")
+            print_mem_info_rank_0("[magi2] after releasing preview experts")
         if use_magi2_refiner:
             latent, _refiner_audio = self.evaluate_magi2_refiner_with_latent(
                 context=context,
@@ -688,11 +750,12 @@ class Magi2InferenceEngine:
         if hasattr(self, "turbo_vae"):
             OffloadUtils.maybe_load(self.turbo_vae, self._vae_mode, self.device)
 
-        decoded = (
-            self.turbo_vae.decode(z).float()
-            if psm.is_group_first_rank("cp")
-            else None
-        )
+        if not psm.is_group_first_rank("cp"):
+            decoded = None
+        elif hasattr(self, "turbo_vae"):
+            decoded = self.turbo_vae.decode(z).float()
+        else:  # MAGI2_TURBO_VAE=0: full Wan2.2 decoder (slower, possibly sharper)
+            decoded = self.vae.decode(z)
         OffloadUtils.maybe_offload(self.vae, self._vae_mode)
         if hasattr(self, "turbo_vae"):
             OffloadUtils.maybe_offload(self.turbo_vae, self._vae_mode)
@@ -782,6 +845,13 @@ def initialize_text_encoder(
     if txt_encoder_type != "qwen35":
         raise ValueError(f"Invalid text encoder type: {txt_encoder_type}")
 
+    global _text_encoder_cache
+    if os.environ.get("MAGI2_FAKE_TEXT_ENCODER", "0") == "1":
+        # Smoke-test stand-in: random [1, L, 5120] features, no 56GB download.
+        _text_encoder_cache = _FakeTextEncoder()
+        OffloadUtils.setup(_text_encoder_cache, OffloadMode.GPU, device)
+        return
+
     text_encoder = Qwen35TextEncoder(
         model_path=model_path,
         device=text_enc_mode.resolve_device(device),
@@ -790,8 +860,24 @@ def initialize_text_encoder(
     )
     OffloadUtils.setup(text_encoder, text_enc_mode, device)
 
-    global _text_encoder_cache
     _text_encoder_cache = text_encoder
+
+
+class _FakeTextEncoder(torch.nn.Module):
+    """Random text features for MAGI2_FAKE_TEXT_ENCODER=1 smoke tests."""
+
+    def __init__(self, num_tokens: int = 256, dim: int = 5120) -> None:
+        super().__init__()
+        self.num_tokens, self.dim = num_tokens, dim
+        self.register_buffer("_anchor", torch.zeros(1), persistent=False)
+
+    def encode(self, prompt: str) -> torch.Tensor:
+        g = torch.Generator(device="cpu").manual_seed(len(prompt))
+        x = torch.randn(1, self.num_tokens, self.dim, generator=g)
+        return x.to(self._anchor.device, torch.bfloat16)
+
+    def get_special_token(self, prompt, target_strs, text_feature) -> torch.Tensor:
+        return text_feature.new_zeros(len(target_strs), self.dim)
 
 
 # -----------------------------------------------------------------------------

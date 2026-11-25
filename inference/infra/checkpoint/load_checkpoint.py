@@ -36,10 +36,23 @@ def load_magi2_model(config: Magi2Config) -> torch.nn.Module:
         f"hidden={arch.hidden_size}, MoE experts={arch.moe_config.num_experts}"
     )
 
-    model = Transformer(arch, ep_size=config.engine_config.ep_size)
-    print_rank_0(f"[magi2] Model built, params_dtype={arch.params_dtype}")
+    # MAGI2_MOE_FP8 implies building on the GPU and streaming weights in, since
+    # each rank's bf16 host copy would not fit in system RAM.
+    build_on_gpu = env_is_true("MAGI2_MOE_FP8") or env_is_true("MAGI2_LOAD_TO_GPU")
+    if build_on_gpu:
+        with torch.device(f"cuda:{torch.cuda.current_device()}"):
+            model = Transformer(arch, ep_size=config.engine_config.ep_size)
+    else:
+        model = Transformer(arch, ep_size=config.engine_config.ep_size)
+    print_rank_0(f"[magi2] Model built, params_dtype={arch.params_dtype}, on_gpu={build_on_gpu}")
+    # Kept so experts freed for the refiner stage can be re-streamed later.
+    model._magi2_engine_config = config.engine_config
 
-    if env_is_true("SKIP_LOAD_MODEL"):
+    if build_on_gpu and not env_is_true("SKIP_LOAD_MODEL"):
+        from inference.infra.checkpoint.magi2_checkpointing import stream_load_magi2_model_
+
+        stream_load_magi2_model_(model, config.engine_config)
+    elif env_is_true("SKIP_LOAD_MODEL"):
         # Transformer.__init__ already filled in synthetic weights. Shapes,
         # compilation and memory footprint stay real; only the read is skipped.
         print_rank_0("[magi2] SKIP_LOAD_MODEL=1: synthetic weights, no checkpoint read")
