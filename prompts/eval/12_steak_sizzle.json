@@ -1,0 +1,172 @@
+{
+  "global_layer": {
+    "context": "A single continuous close-up of a steak being butter-basted in a cast-iron pan.",
+    "description": "A thick steak sizzles in a black skillet; a cook tilts the pan and spoons foaming butter with garlic and thyme over it.",
+    "aesthetics": {
+      "style": "high-end food cinematography",
+      "contrast": "high contrast, glossy highlights",
+      "saturation": "warm, rich saturation",
+      "color_scheme": "deep brown crust, golden foaming butter, green thyme, black iron",
+      "mood_atmosphere": "indulgent, mouthwatering"
+    },
+    "audio_baseline": {
+      "ambience": "a restaurant kitchen: a loud steady sizzle and an extractor fan",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [
+      {
+        "object_id": "<object 1>",
+        "description": "a thick ribeye steak in a cast-iron skillet",
+        "shape_and_color": "dark caramelized crust with pink edges",
+        "texture": "crisp seared surface, glistening fat",
+        "relative_size": "fills most of the pan",
+        "position": "center",
+        "orientation": "upright"
+      }
+    ],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "warm overhead kitchen light",
+      "direction": "top-down from the left",
+      "shadows": "deep shadows inside the pan",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "a dark steel stovetop with blue gas flames under the skillet"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "a cook's hands",
+        "position": "entering from the top of frame",
+        "orientation": "toward the pan",
+        "visual_attributes": {
+          "hands": "tanned hands, one holding a large spoon"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "locked-off close-up at a low angle",
+      "default_depth_of_field": "shallow; the steak sharp",
+      "lens_focal_length": "85mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "The steak sizzles hard; a knob of butter, garlic and thyme are dropped in and begin to foam.",
+          "active_background": "smoke curls up from the pan",
+          "camera_delta": {
+            "focus": "the steak's crust",
+            "camera_position": "low, at pan height",
+            "composition": "close-up",
+            "camera_movement": {
+              "type": "slow push-in",
+              "direction": "forward",
+              "intensity": "subtle"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:01.5-00:05.0",
+            "trigger": "butter hits the hot pan",
+            "effect_outcome": "it melts instantly and foams around the steak",
+            "physics": "bubbling, spattering fat, wisps of smoke"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "extractor fan"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.0-00:05.0",
+              "sound_description": "a loud continuous sizzle that intensifies when the butter drops in",
+              "visual_sync": "matches the butter landing at 00:01.5"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "A hand tilts the pan and repeatedly spoons foaming butter over the steak.",
+          "active_background": "smoke drifts through the light",
+          "camera_delta": {
+            "focus": "the spoon and the steak",
+            "camera_position": "pan height",
+            "composition": "close-up",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "top of frame",
+              "relative_size": "hands only",
+              "orientation": "toward the pan"
+            },
+            "action": {
+              "primary_action": "basting",
+              "body_configuration": "one hand tilts the handle, the other spoons",
+              "motion_detail": "the spoon scoops foaming butter and pours it over the crust three times",
+              "interaction": "bastes the steak",
+              "facial_expression": "neutral"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:05.5-00:10.0",
+            "trigger": "butter is spooned over the steak",
+            "effect_outcome": "it runs down the crust and sizzles",
+            "physics": "hot fat crackles and spits"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "extractor fan"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:05.5-00:10.0",
+              "sound_description": "rhythmic sizzle bursts with each spoonful",
+              "visual_sync": "matches each pour of butter"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "global_layer": {
+    "context": "A single continuous take of a busy pedestrian crossing in a big city at night in the rain.",
+    "description": "Dozens of people with umbrellas cross a wide intersection as neon signs reflect on the wet asphalt.",
+    "aesthetics": {
+      "style": "cinematic urban night photography",
+      "contrast": "high contrast",
+      "saturation": "saturated neon colors",
+      "color_scheme": "magenta and cyan neon, black wet asphalt, clear and colored umbrellas",
+      "mood_atmosphere": "busy, atmospheric"
+    },
+    "audio_baseline": {
+      "ambience": "steady rain, crosswalk beeping signal, traffic hiss, crowd footsteps",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "night, lit by neon signs and street lights",
+      "direction": "from the signs on the buildings",
+      "shadows": "glossy reflections instead of shadows",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "tall buildings covered in glowing signs and billboards, a wide zebra crossing"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "a crowd of pedestrians with umbrellas",
+        "position": "spread across the crosswalk",
+        "orientation": "walking in many directions",
+        "visual_attributes": {
+          "clothing": "dark coats, a few bright raincoats"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "slow high-angle crane down",
+      "default_depth_of_field": "deep; the whole crossing in focus",
+      "lens_focal_length": "35mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "The signal turns and the crowd floods into the crossing from all sides.",
+          "active_background": "rain streaks through the neon light",
+          "camera_delta": {
+            "focus": "the crowd",
+            "camera_position": "high above the crossing",
+            "composition": "wide shot, crossing fills the frame",
+            "camera_movement": {
+              "type": "crane",
+              "direction": "slowly descending",
+              "intensity": "slow"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 50,
+            "spatial_position": {
+              "location": "everywhere across the crossing",
+              "relative_size": "small figures",
+              "orientation": "all directions"
+            },
+            "action": {
+              "primary_action": "crossing the street",
+              "body_configuration": "walking briskly under umbrellas",
+              "motion_detail": "hundreds of footsteps splash through puddles, umbrellas bob",
+              "interaction": "weave past each other",
+              "facial_expression": "neutral"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "heavy rain and crowd footsteps"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.5-00:05.0",
+              "sound_description": "the electronic crosswalk melody beeping",
+              "visual_sync": "matches the signal turning green"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "The camera settles at street level as a woman with a clear umbrella walks toward it, neon reflected in the umbrella.",
+          "active_background": "puddles ripple",
+          "camera_delta": {
+            "focus": "a woman with a clear umbrella",
+            "camera_position": "eye level",
+            "composition": "medium-wide, crowd behind her",
+            "camera_movement": {
+              "type": "crane",
+              "direction": "settling to a stop",
+              "intensity": "slow"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center foreground and behind",
+              "relative_size": "one figure larger in the foreground",
+              "orientation": "toward camera"
+            },
+            "action": {
+              "primary_action": "walking toward the camera",
+              "body_configuration": "upright, umbrella held high",
+              "motion_detail": "raindrops bead and run down the clear umbrella, neon colors slide across it",
+              "interaction": "walks through the crowd",
+              "facial_expression": "calm"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "rain on umbrellas, close and crisp"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:06.0",
+              "sound_description": "a car tire hissing through water",
+              "visual_sync": "matches a taxi passing behind"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

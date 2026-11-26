@@ -1,0 +1,144 @@
+{
+  "global_layer": {
+    "context": "A single continuous close-up in a bright kitchen of hot coffee being poured into a glass mug.",
+    "description": "Coffee streams from a gooseneck kettle-style server into a clear glass mug, swirling, then cream is poured in and blooms.",
+    "aesthetics": {
+      "style": "commercial food cinematography",
+      "contrast": "crisp, clean contrast",
+      "saturation": "rich warm browns, otherwise neutral",
+      "color_scheme": "dark coffee, white cream, clear glass, pale marble counter",
+      "mood_atmosphere": "calm, appetizing"
+    },
+    "audio_baseline": {
+      "ambience": "a quiet kitchen in the morning, a clock ticking softly",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [
+      {
+        "object_id": "<object 1>",
+        "description": "a clear double-wall glass mug",
+        "shape_and_color": "transparent tall cylinder",
+        "texture": "smooth glass with gentle reflections",
+        "relative_size": "fills the middle third of the frame",
+        "position": "center on the counter",
+        "orientation": "upright"
+      }
+    ],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "soft morning window light",
+      "direction": "from behind the mug, backlighting the liquid",
+      "shadows": "soft shadows on the marble",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "a white marble countertop and a blurred bright kitchen window"
+    },
+    "alive_subjects_static": [],
+    "camera_cinematography": {
+      "overall_camera_style": "locked-off close-up",
+      "default_depth_of_field": "shallow; the mug sharp",
+      "lens_focal_length": "90mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "A thin stream of dark coffee pours into the empty glass mug and fills it two thirds.",
+          "active_background": "steam begins to rise",
+          "camera_delta": {
+            "focus": "the stream and the liquid surface",
+            "camera_position": "at mug height",
+            "composition": "close-up, mug centered",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:00.5-00:05.0",
+            "trigger": "coffee pours into the mug",
+            "effect_outcome": "the level rises with swirling foam and small bubbles",
+            "physics": "the liquid swirls in a vortex, a thin crema forms at the top, steam lifts"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "soft clock ticking"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.5-00:05.0",
+              "sound_description": "a gentle liquid pouring sound rising in pitch as the mug fills",
+              "visual_sync": "matches the stream"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "Cream pours in from above and blooms into the coffee in slow white clouds.",
+          "active_background": "steam keeps rising",
+          "camera_delta": {
+            "focus": "the clouds of cream",
+            "camera_position": "at mug height",
+            "composition": "close-up",
+            "camera_movement": {
+              "type": "slow push-in",
+              "direction": "forward",
+              "intensity": "very slow"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:05.5-00:10.0",
+            "trigger": "cream is poured in",
+            "effect_outcome": "white plumes billow and curl downward through the dark coffee",
+            "physics": "the denser cream sinks and swirls into marbled turbulent clouds"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "soft clock ticking"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:05.5-00:07.0",
+              "sound_description": "a soft trickle of cream",
+              "visual_sync": "matches the pour"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

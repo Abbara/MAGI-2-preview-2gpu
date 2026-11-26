@@ -1,0 +1,169 @@
+{
+  "global_layer": {
+    "context": "A single continuous macro-style take of a pianist's hands on a grand piano.",
+    "description": "Close-up of two hands playing a flowing arpeggio on the keys, then a soft final chord.",
+    "aesthetics": {
+      "style": "elegant concert cinematography",
+      "contrast": "high contrast, deep blacks",
+      "saturation": "low saturation",
+      "color_scheme": "black lacquer, ivory keys, warm skin tones",
+      "mood_atmosphere": "intimate, refined"
+    },
+    "audio_baseline": {
+      "ambience": "a quiet concert hall with a slight natural reverb",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "a single warm spotlight from above",
+      "direction": "top-down, slightly from the right",
+      "shadows": "crisp shadows of the fingers on the keys",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "the black lacquered body of a grand piano fading into darkness"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "the hands of an adult pianist",
+        "position": "on the keyboard, filling the lower two thirds",
+        "orientation": "fingers pointing away from camera",
+        "visual_attributes": {
+          "hands": "slender fingers, short clean nails, a thin silver ring on the right hand"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "slow lateral slide along the keyboard",
+      "default_depth_of_field": "very shallow; the fingers sharp, keys falling off into blur",
+      "lens_focal_length": "100mm macro"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "The right hand plays a rising arpeggio while the left holds a low chord.",
+          "active_background": "the piano's reflection shimmers",
+          "camera_delta": {
+            "focus": "the right hand's fingers",
+            "camera_position": "low, at keyboard height",
+            "composition": "close-up, keys diagonal across the frame",
+            "camera_movement": {
+              "type": "lateral slide",
+              "direction": "left to right",
+              "intensity": "slow"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center",
+              "relative_size": "two hands fill the frame",
+              "orientation": "fingers away from camera"
+            },
+            "action": {
+              "primary_action": "playing an arpeggio",
+              "body_configuration": "wrists level, fingers curved",
+              "motion_detail": "fingers press keys one after another in a smooth wave; keys visibly depress and rise",
+              "interaction": "fingers on the keys",
+              "facial_expression": "neutral"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "silent hall"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.0-00:05.0",
+              "sound_description": "a flowing rising piano arpeggio in C major with natural hall reverb",
+              "visual_sync": "each note matches a key going down"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "Both hands come together for a soft final chord and lift slowly from the keys.",
+          "active_background": "reflections settle",
+          "camera_delta": {
+            "focus": "both hands",
+            "camera_position": "keyboard height",
+            "composition": "close-up",
+            "camera_movement": {
+              "type": "lateral slide",
+              "direction": "slowing to a stop",
+              "intensity": "very slow"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center",
+              "relative_size": "both hands",
+              "orientation": "fingers away from camera"
+            },
+            "action": {
+              "primary_action": "playing a final chord and lifting",
+              "body_configuration": "hands press together, then lift",
+              "motion_detail": "all fingers press at once, hold, then rise gently off the keys",
+              "interaction": "fingers on the keys",
+              "facial_expression": "neutral"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "silent hall"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:06.0",
+              "sound_description": "a soft sustained major chord",
+              "visual_sync": "matches both hands pressing down"
+            },
+            {
+              "timestamp": "00:06.0-00:10.0",
+              "sound_description": "the chord rings and fades into the hall reverb",
+              "visual_sync": "matches the hands lifting"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

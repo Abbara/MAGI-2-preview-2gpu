@@ -1,0 +1,192 @@
+{
+  "global_layer": {
+    "context": "A single continuous take of a busker playing guitar and singing on a cobblestone street at golden hour.",
+    "description": "A young man strums an acoustic guitar and sings a short gentle melody while a few people walk past.",
+    "aesthetics": {
+      "style": "warm cinematic street performance",
+      "contrast": "moderate contrast",
+      "saturation": "warm golden saturation",
+      "color_scheme": "golden sunlight, honey wood guitar, grey cobblestones",
+      "mood_atmosphere": "nostalgic, gentle"
+    },
+    "audio_baseline": {
+      "ambience": "a quiet old-town street with distant footsteps and pigeons",
+      "dialogue": {
+        "language": "English",
+        "speaker_tags": [
+          "<subject 1>"
+        ]
+      }
+    },
+    "objects_static": [
+      {
+        "object_id": "<object 1>",
+        "description": "an acoustic guitar",
+        "shape_and_color": "natural spruce top with a dark rosewood back",
+        "texture": "glossy wood",
+        "relative_size": "held across his lap",
+        "position": "in his arms",
+        "orientation": "horizontal"
+      }
+    ],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "golden hour sun low in the sky",
+      "direction": "from behind frame left, rim-lighting his hair",
+      "shadows": "long warm shadows on the cobblestones",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "an old European street with stone facades, flower boxes and a café awning, softly blurred"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "a young man in his twenties with curly hair",
+        "position": "center-left, sitting on a low stone step",
+        "orientation": "three-quarter toward camera",
+        "visual_attributes": {
+          "age_group": "mid-twenties",
+          "facial_features": "curly dark hair, short beard",
+          "clothing": "cream linen shirt, brown trousers"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "slow dolly arc",
+      "default_depth_of_field": "shallow; musician sharp",
+      "lens_focal_length": "85mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "He strums a slow chord progression and starts singing.",
+          "active_background": "a couple walks past in the background",
+          "camera_delta": {
+            "focus": "his face and strumming hand",
+            "camera_position": "seated eye level",
+            "composition": "medium shot",
+            "camera_movement": {
+              "type": "dolly arc",
+              "direction": "slowly from left to right",
+              "intensity": "gentle"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center-left",
+              "relative_size": "full upper body with guitar",
+              "orientation": "three-quarter"
+            },
+            "action": {
+              "primary_action": "playing guitar and singing",
+              "body_configuration": "seated, guitar on knee, head tilted",
+              "motion_detail": "right hand strums in a steady rhythm, left hand changes chords on the neck, lips shape the lyric",
+              "interaction": "plays the guitar",
+              "facial_expression": "eyes half closed, absorbed"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [
+            {
+              "timestamp": "00:00.8-00:04.6",
+              "speaker": "<subject 1>",
+              "text": "Oh the evening light is falling slow...",
+              "delivery": "sung softly in a warm tenor, melodic"
+            }
+          ],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "soft street ambience under the music"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.0-00:05.0",
+              "sound_description": "steady acoustic guitar strumming in a major key",
+              "visual_sync": "each strum matches the right hand"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "He sings the next line, looks up and smiles at a passerby while still strumming.",
+          "active_background": "a pigeon lands on the cobblestones",
+          "camera_delta": {
+            "focus": "his face",
+            "camera_position": "seated eye level",
+            "composition": "medium close-up",
+            "camera_movement": {
+              "type": "dolly arc",
+              "direction": "continuing left to right",
+              "intensity": "gentle"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center",
+              "relative_size": "upper body",
+              "orientation": "three-quarter"
+            },
+            "action": {
+              "primary_action": "singing and smiling",
+              "body_configuration": "lifts his head",
+              "motion_detail": "keeps strumming, finishes the line, then smiles",
+              "interaction": "plays the guitar",
+              "facial_expression": "warm smile"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [
+            {
+              "timestamp": "00:05.2-00:08.6",
+              "speaker": "<subject 1>",
+              "text": "and I'll be waiting where the rivers go.",
+              "delivery": "sung softly, holding the last note"
+            }
+          ],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "street ambience, distant church bell"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:05.0-00:10.0",
+              "sound_description": "the guitar strumming continues and ends on a ringing chord",
+              "visual_sync": "matches the final strum"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

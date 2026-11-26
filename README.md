@@ -346,7 +346,7 @@ is ffmpeg `volumedetect` mean volume.
 
 ## Performance
 
-Measured on the reference machine (2× RTX PRO 6000, 16-core Threadripper, NVMe):
+Measured on the reference machine (2× RTX PRO 6000, 16-core Threadripper, NVMe), with both GPUs power-limited to 300 W (their default is 600 W), so expect shorter times at the stock limit:
 
 | Stage | Time |
 |---|---|
@@ -363,6 +363,11 @@ Measured on the reference machine (2× RTX PRO 6000, 16-core Threadripper, NVMe)
 | Refiner stage (preview experts released) | ~30 GB + activations, ~90 GB reserved peak |
 
 ---
+
+
+### Capability sweep
+
+`scripts/eval_batch.sh` renders 15 different 1080p clips (prompts in `prompts/eval/`, built by `make_prompts.py`): speech, two-person dialogue, Mandarin, singing, piano, a kickflip, liquids, fire, a rainy crowd, chalkboard text, a drone shot, cooking, a thunderstorm, and two image-to-video samples. Each clip takes 42–50 min at 300 W, about 11 h in total. Finished clips are skipped, so the script can be re-run after an interruption.
 
 ## How it fits in 2× 96 GB
 

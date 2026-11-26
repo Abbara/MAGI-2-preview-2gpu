@@ -1,0 +1,177 @@
+{
+  "global_layer": {
+    "context": "A single continuous take of a woman speaking directly to camera in a quiet home studio.",
+    "description": "A woman in her thirties looks into the lens and delivers two short sentences about the weather, smiling at the end.",
+    "aesthetics": {
+      "style": "natural documentary interview look",
+      "contrast": "soft, gentle contrast",
+      "saturation": "natural skin tones, moderate saturation",
+      "color_scheme": "warm beige walls, a dark green sweater, soft daylight",
+      "mood_atmosphere": "calm, friendly, intimate"
+    },
+    "audio_baseline": {
+      "ambience": "a quiet room with a faint hum of distant traffic through a closed window",
+      "dialogue": {
+        "language": "English",
+        "speaker_tags": [
+          "<subject 1>"
+        ]
+      }
+    },
+    "objects_static": [],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "soft daylight from a large window",
+      "direction": "key light from frame left, gentle fill from the right",
+      "shadows": "soft, subtle shadows under the chin",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "a softly blurred home office with a bookshelf and a potted plant behind her"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "a woman in her thirties with shoulder-length dark brown hair",
+        "position": "centered in frame",
+        "orientation": "facing the camera",
+        "visual_attributes": {
+          "age_group": "early thirties",
+          "facial_features": "brown eyes, light freckles, natural makeup",
+          "clothing": "dark green knit sweater",
+          "hair": "shoulder-length dark brown hair, loosely tucked behind one ear"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "locked-off medium close-up on a tripod",
+      "default_depth_of_field": "shallow, face sharp, background softly blurred",
+      "lens_focal_length": "50mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "She takes a small breath and begins speaking warmly to the camera.",
+          "active_background": "the room stays still",
+          "camera_delta": {
+            "focus": "her eyes and mouth",
+            "camera_position": "eye level, one and a half meters away",
+            "composition": "medium close-up, head and shoulders centered",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center of frame",
+              "relative_size": "head and shoulders fill the middle third",
+              "orientation": "facing camera"
+            },
+            "action": {
+              "primary_action": "speaking to camera",
+              "body_configuration": "upright, shoulders relaxed",
+              "motion_detail": "lips form each word clearly, small natural head nods, occasional blink",
+              "interaction": "none",
+              "facial_expression": "warm and engaged"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [
+            {
+              "timestamp": "00:00.6-00:04.2",
+              "speaker": "<subject 1>",
+              "text": "The forecast says rain all week, but I don't believe it.",
+              "delivery": "conversational, warm, slightly amused"
+            }
+          ],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "quiet room tone"
+            }
+          ],
+          "special_audio_events": []
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "She tilts her head, finishes her thought, and breaks into a broad smile.",
+          "active_background": "the room stays still",
+          "camera_delta": {
+            "focus": "her face",
+            "camera_position": "eye level",
+            "composition": "medium close-up",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center of frame",
+              "relative_size": "head and shoulders",
+              "orientation": "facing camera"
+            },
+            "action": {
+              "primary_action": "finishing the sentence and smiling",
+              "body_configuration": "head tilts slightly to the right",
+              "motion_detail": "lips articulate the words, then spread into a smile showing teeth, eyes crinkle",
+              "interaction": "none",
+              "facial_expression": "playful, then smiling broadly"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [
+            {
+              "timestamp": "00:05.3-00:07.8",
+              "speaker": "<subject 1>",
+              "text": "Look outside. It's perfectly sunny.",
+              "delivery": "light, playful, with a small laugh at the end"
+            }
+          ],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "quiet room tone"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:08.2",
+              "sound_description": "a short soft laugh",
+              "visual_sync": "matches her smile"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

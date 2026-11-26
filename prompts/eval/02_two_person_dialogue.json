@@ -1,0 +1,232 @@
+{
+  "global_layer": {
+    "context": "A single continuous take in a cluttered woodworking shop where a grandfather and his grandson talk over a birdhouse.",
+    "description": "An elderly man holds up a small wooden birdhouse; the boy asks a question and the man answers, both smiling.",
+    "aesthetics": {
+      "style": "warm naturalistic drama",
+      "contrast": "moderate contrast",
+      "saturation": "warm, earthy saturation",
+      "color_scheme": "honey-colored wood, sawdust, a blue flannel shirt",
+      "mood_atmosphere": "tender, cozy"
+    },
+    "audio_baseline": {
+      "ambience": "a quiet workshop: a faint radio playing far away and birds outside",
+      "dialogue": {
+        "language": "English",
+        "speaker_tags": [
+          "<subject 1>",
+          "<subject 2>"
+        ]
+      }
+    },
+    "objects_static": [
+      {
+        "object_id": "<object 1>",
+        "description": "a small unpainted wooden birdhouse",
+        "shape_and_color": "pale pine box with a peaked roof and a round hole",
+        "texture": "freshly sanded wood",
+        "relative_size": "about the size of a loaf of bread",
+        "position": "in the man's hands at chest height",
+        "orientation": "upright"
+      }
+    ],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "late afternoon sun through a dusty window",
+      "direction": "from frame right, low and warm",
+      "shadows": "long soft shadows across the workbench",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "a wooden workbench covered in tools, wood shavings and clamps, pegboard wall behind"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "an elderly man around seventy",
+        "position": "frame left behind the bench",
+        "orientation": "three-quarter toward the boy",
+        "visual_attributes": {
+          "age_group": "about seventy",
+          "facial_features": "white beard, reading glasses on his nose, deep smile lines",
+          "clothing": "blue flannel shirt with rolled sleeves, a leather apron"
+        }
+      },
+      {
+        "subject_id": "<subject 2>",
+        "description": "a boy of about nine",
+        "position": "frame right",
+        "orientation": "three-quarter toward the man",
+        "visual_attributes": {
+          "age_group": "about nine",
+          "facial_features": "messy light-brown hair, freckles",
+          "clothing": "red hoodie"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "handheld-steady two-shot",
+      "default_depth_of_field": "moderate; both faces sharp",
+      "lens_focal_length": "35mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "The man lifts the birdhouse to show it; the boy leans in and asks a question.",
+          "active_background": "dust motes float in the sunbeam",
+          "camera_delta": {
+            "focus": "both faces",
+            "camera_position": "chest height, across the bench",
+            "composition": "two-shot, man left, boy right",
+            "camera_movement": {
+              "type": "slow push-in",
+              "direction": "forward",
+              "intensity": "subtle"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "left third",
+              "relative_size": "waist-up",
+              "orientation": "toward the boy"
+            },
+            "action": {
+              "primary_action": "presenting the birdhouse",
+              "body_configuration": "both hands raise the birdhouse",
+              "motion_detail": "turns it slowly to show the round entry hole",
+              "interaction": "holds the birdhouse out to the boy",
+              "facial_expression": "proud"
+            }
+          },
+          {
+            "subject_id": "<subject 2>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "right third",
+              "relative_size": "waist-up",
+              "orientation": "toward the man"
+            },
+            "action": {
+              "primary_action": "asking a question",
+              "body_configuration": "leans forward on the bench",
+              "motion_detail": "lips move as he speaks, eyes on the birdhouse",
+              "interaction": "looks at the birdhouse",
+              "facial_expression": "curious"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [
+            {
+              "timestamp": "00:01.5-00:03.8",
+              "speaker": "<subject 2>",
+              "text": "Grandpa, will a real bird actually live in there?",
+              "delivery": "eager, high child's voice"
+            }
+          ],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "workshop quiet, distant radio"
+            }
+          ],
+          "special_audio_events": []
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "The man answers with a chuckle and hands the birdhouse to the boy, who grins.",
+          "active_background": "dust motes keep drifting",
+          "camera_delta": {
+            "focus": "both faces",
+            "camera_position": "chest height",
+            "composition": "two-shot",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "left third",
+              "relative_size": "waist-up",
+              "orientation": "toward the boy"
+            },
+            "action": {
+              "primary_action": "answering and handing over the birdhouse",
+              "body_configuration": "extends his arms",
+              "motion_detail": "speaks, then chuckles; places the birdhouse in the boy's hands",
+              "interaction": "hands over the birdhouse",
+              "facial_expression": "warm, amused"
+            }
+          },
+          {
+            "subject_id": "<subject 2>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "right third",
+              "relative_size": "waist-up",
+              "orientation": "toward the man"
+            },
+            "action": {
+              "primary_action": "receiving the birdhouse",
+              "body_configuration": "takes it with both hands",
+              "motion_detail": "grins widely and looks down at it",
+              "interaction": "holds the birdhouse",
+              "facial_expression": "delighted"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [
+            {
+              "timestamp": "00:05.3-00:08.0",
+              "speaker": "<subject 1>",
+              "text": "If we build it right, they'll move in by spring.",
+              "delivery": "low, gravelly, kind, with a small chuckle"
+            }
+          ],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "workshop quiet, birds outside"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:08.6",
+              "sound_description": "a soft wooden knock as the birdhouse changes hands",
+              "visual_sync": "matches the handover"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "global_layer": {
+    "context": "A single continuous take at an outdoor concrete skatepark on a sunny afternoon.",
+    "description": "A skateboarder rolls toward the camera, pops a kickflip, lands it cleanly and rolls away.",
+    "aesthetics": {
+      "style": "energetic action sports film",
+      "contrast": "high contrast in harsh sun",
+      "saturation": "vivid saturation",
+      "color_scheme": "pale grey concrete, bright blue sky, a yellow T-shirt",
+      "mood_atmosphere": "energetic, exciting"
+    },
+    "audio_baseline": {
+      "ambience": "a skatepark: distant wheels rolling, wind, a few people cheering far away",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [
+      {
+        "object_id": "<object 1>",
+        "description": "a skateboard",
+        "shape_and_color": "black grip tape on top, red graphic on the bottom",
+        "texture": "sandpaper grip, scuffed wood",
+        "relative_size": "about knee-length",
+        "position": "under the skater's feet",
+        "orientation": "horizontal"
+      }
+    ],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "bright midday sun",
+      "direction": "high and slightly behind the skater",
+      "shadows": "short hard shadows directly under him",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "a concrete skatepark with ramps, rails and palm trees against a clear sky"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "a young male skateboarder",
+        "position": "rolling toward camera",
+        "orientation": "facing camera",
+        "visual_attributes": {
+          "age_group": "about twenty",
+          "clothing": "yellow T-shirt, black cargo pants, white sneakers, backward cap"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "low-angle tracking shot",
+      "default_depth_of_field": "deep; skater and park both in focus",
+      "lens_focal_length": "24mm wide"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "He pushes twice, crouches and pops a kickflip; the board spins under him.",
+          "active_background": "palm fronds sway",
+          "camera_delta": {
+            "focus": "the skater and board",
+            "camera_position": "low, near the ground",
+            "composition": "full body, skater centered",
+            "camera_movement": {
+              "type": "tracking backward",
+              "direction": "backward as he approaches",
+              "intensity": "fast"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center",
+              "relative_size": "full body fills half the frame height",
+              "orientation": "facing camera"
+            },
+            "action": {
+              "primary_action": "pushing then kickflipping",
+              "body_configuration": "crouches low, then jumps",
+              "motion_detail": "back foot snaps the tail, front foot flicks off the edge, the board flips a full rotation in the air",
+              "interaction": "jumps over the spinning board",
+              "facial_expression": "focused"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:03.2-00:04.2",
+            "trigger": "his front foot flicks the board",
+            "effect_outcome": "the board rotates one full turn under him",
+            "physics": "the board spins along its long axis then is caught by both feet"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "wind and distant wheels"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.5-00:02.5",
+              "sound_description": "two pushes of urethane wheels rolling on concrete",
+              "visual_sync": "matches the pushes"
+            },
+            {
+              "timestamp": "00:03.2",
+              "sound_description": "a sharp wooden pop of the tail hitting concrete",
+              "visual_sync": "matches the pop"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "He lands with both feet on the bolts, rolls past the camera and raises a fist.",
+          "active_background": "two friends cheer in the background",
+          "camera_delta": {
+            "focus": "the skater",
+            "camera_position": "low",
+            "composition": "full body, then passing to the right",
+            "camera_movement": {
+              "type": "pan",
+              "direction": "following him to the right",
+              "intensity": "fast"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "center then exiting right",
+              "relative_size": "full body",
+              "orientation": "turning to profile"
+            },
+            "action": {
+              "primary_action": "landing and rolling away",
+              "body_configuration": "knees bend on impact, then he stands tall",
+              "motion_detail": "lands with a slight crouch, rolls past, lifts his right fist",
+              "interaction": "rides the board",
+              "facial_expression": "triumphant grin"
+            }
+          }
+        ],
+        "text_render": [],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "wind and wheels fading"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:05.1",
+              "sound_description": "a solid clack as all four wheels land",
+              "visual_sync": "matches the landing"
+            },
+            {
+              "timestamp": "00:06.0-00:08.0",
+              "sound_description": "friends whoop and cheer",
+              "visual_sync": "matches the raised fist"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

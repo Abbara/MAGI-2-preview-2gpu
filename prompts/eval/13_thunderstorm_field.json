@@ -1,0 +1,146 @@
+{
+  "global_layer": {
+    "context": "A single continuous wide take of a thunderstorm rolling over a wheat field at dusk.",
+    "description": "Dark storm clouds churn over a golden wheat field bending in the wind; a lightning bolt strikes in the distance followed by thunder.",
+    "aesthetics": {
+      "style": "dramatic landscape cinematography",
+      "contrast": "very high contrast",
+      "saturation": "moody, desaturated with golden wheat",
+      "color_scheme": "slate-blue clouds, golden wheat, a flash of white lightning",
+      "mood_atmosphere": "ominous, powerful"
+    },
+    "audio_baseline": {
+      "ambience": "strong wind rushing through the wheat, distant rumbling thunder",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "dusk under heavy storm clouds, a band of light at the horizon",
+      "direction": "low from the horizon",
+      "shadows": "no hard shadows, flat stormy light",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "an endless field of ripe wheat under a vast sky of rolling storm clouds, a lone tree on the horizon"
+    },
+    "alive_subjects_static": [],
+    "camera_cinematography": {
+      "overall_camera_style": "locked-off wide shot on a tripod",
+      "default_depth_of_field": "deep; everything sharp",
+      "lens_focal_length": "24mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "Wind sweeps waves across the wheat as the clouds roll toward the camera.",
+          "active_background": "the clouds boil and churn",
+          "camera_delta": {
+            "focus": "the sky and the field",
+            "camera_position": "eye level, standing in the field",
+            "composition": "wide, horizon in the lower third",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:00.0-00:05.0",
+            "trigger": "strong gusts of wind",
+            "effect_outcome": "waves ripple across the wheat field",
+            "physics": "stalks bend in rolling waves, clouds move fast"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "rushing wind through wheat"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:02.0",
+              "sound_description": "a low distant rumble of thunder",
+              "visual_sync": "the clouds flicker faintly"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "A bright forked lightning bolt strikes near the lone tree; thunder cracks a moment later and rain begins.",
+          "active_background": "rain curtains sweep in",
+          "camera_delta": {
+            "focus": "the lightning",
+            "camera_position": "eye level",
+            "composition": "wide",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [],
+        "text_render": [],
+        "causal_events": [
+          {
+            "event_id": "event 1",
+            "timestamp_range": "00:06.0-00:06.4",
+            "trigger": "lightning strikes near the tree",
+            "effect_outcome": "the whole landscape flashes white for an instant",
+            "physics": "a branching bolt connects cloud to ground"
+          },
+          {
+            "event_id": "event 2",
+            "timestamp_range": "00:07.5-00:10.0",
+            "trigger": "the rain front arrives",
+            "effect_outcome": "grey rain sheets sweep across the field",
+            "physics": "rain falls at an angle in the wind"
+          }
+        ],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "wind and rain"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:06.9",
+              "sound_description": "a sharp, deafening crack of thunder rolling into a long rumble",
+              "visual_sync": "follows the lightning flash after a short delay"
+            },
+            {
+              "timestamp": "00:07.5-00:10.0",
+              "sound_description": "heavy rain hissing across the wheat",
+              "visual_sync": "matches the rain front"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

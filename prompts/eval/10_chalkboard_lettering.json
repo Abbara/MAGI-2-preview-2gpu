@@ -1,0 +1,195 @@
+{
+  "global_layer": {
+    "context": "A single continuous take of a bakery owner hand-lettering a chalkboard menu.",
+    "description": "A woman writes the words 'FRESH BREAD' in large white chalk capital letters on a black chalkboard, then steps back.",
+    "aesthetics": {
+      "style": "warm small-business documentary",
+      "contrast": "moderate contrast",
+      "saturation": "warm natural saturation",
+      "color_scheme": "black chalkboard, white chalk, warm wood frame, flour-dusted apron",
+      "mood_atmosphere": "pleasant, crafty"
+    },
+    "audio_baseline": {
+      "ambience": "a quiet bakery in the early morning, an oven fan humming",
+      "dialogue": {
+        "language": "none",
+        "speaker_tags": []
+      }
+    },
+    "objects_static": [
+      {
+        "object_id": "<object 1>",
+        "description": "a large black chalkboard on an easel",
+        "shape_and_color": "rectangular black board in a light wooden frame",
+        "texture": "matte slate with faint old chalk smudges",
+        "relative_size": "taller than her torso",
+        "position": "center-left",
+        "orientation": "upright"
+      }
+    ],
+    "video_metadata": {
+      "duration": 10.0,
+      "aspect_ratio": "16:9"
+    },
+    "lighting_baseline": {
+      "conditions": "warm morning light from the shop window",
+      "direction": "from frame right",
+      "shadows": "soft shadows",
+      "source_consistency": "the lighting holds steady for the full clip"
+    },
+    "environment_baseline": {
+      "background_setting": "a bakery counter with baskets of bread loaves softly blurred behind the board"
+    },
+    "alive_subjects_static": [
+      {
+        "subject_id": "<subject 1>",
+        "description": "a woman in her forties, the baker",
+        "position": "frame right of the chalkboard",
+        "orientation": "profile facing the board",
+        "visual_attributes": {
+          "age_group": "forties",
+          "facial_features": "hair tied up in a bun",
+          "clothing": "white shirt and a flour-dusted denim apron"
+        }
+      }
+    ],
+    "camera_cinematography": {
+      "overall_camera_style": "locked-off medium shot",
+      "default_depth_of_field": "moderate; the board sharp",
+      "lens_focal_length": "50mm"
+    }
+  },
+  "dynamic_layer": {
+    "timeline_segments": [
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:00.0-00:05.0",
+          "segment_description": "She writes 'FRESH' letter by letter in bold white chalk capitals.",
+          "active_background": "steam from the ovens drifts in the background",
+          "camera_delta": {
+            "focus": "the chalk and the letters",
+            "camera_position": "chest height",
+            "composition": "medium shot, board left, baker right",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:00.0-00:05.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "right third",
+              "relative_size": "waist-up",
+              "orientation": "profile"
+            },
+            "action": {
+              "primary_action": "writing on the chalkboard",
+              "body_configuration": "right arm raised to the board",
+              "motion_detail": "the chalk draws each stroke of F, R, E, S, H in sequence",
+              "interaction": "writes on the board",
+              "facial_expression": "concentrated"
+            }
+          }
+        ],
+        "text_render": [
+          {
+            "timestamp_range": "00:00.5-00:05.0",
+            "content": "FRESH",
+            "style": "bold hand-drawn white chalk capital letters",
+            "position": "upper half of the chalkboard, appearing letter by letter"
+          }
+        ],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:00.0-00:05.0",
+              "ambience": "oven fan hum"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:00.5-00:05.0",
+              "sound_description": "the scratchy tapping of chalk on slate",
+              "visual_sync": "each stroke matches the chalk moving"
+            }
+          ]
+        }
+      },
+      {
+        "segment_basic_info": {
+          "timestamp_range": "00:05.0-00:10.0",
+          "segment_description": "She writes 'BREAD' on the line below, then steps back and dusts off her hands.",
+          "active_background": "bread loaves on the counter",
+          "camera_delta": {
+            "focus": "the finished words",
+            "camera_position": "chest height",
+            "composition": "medium shot",
+            "camera_movement": {
+              "type": "static",
+              "direction": "none",
+              "intensity": "none"
+            }
+          }
+        },
+        "objects": [],
+        "alive_subjects": [
+          {
+            "subject_id": "<subject 1>",
+            "timestamp": "00:05.0-00:10.0",
+            "number_of_subjects": 1,
+            "spatial_position": {
+              "location": "right third",
+              "relative_size": "waist-up",
+              "orientation": "profile, then turning toward camera"
+            },
+            "action": {
+              "primary_action": "finishing the word and stepping back",
+              "body_configuration": "lowers her arm, steps back",
+              "motion_detail": "writes B, R, E, A, D, then claps chalk dust off her hands",
+              "interaction": "admires the board",
+              "facial_expression": "satisfied smile"
+            }
+          }
+        ],
+        "text_render": [
+          {
+            "timestamp_range": "00:05.0-00:10.0",
+            "content": "FRESH BREAD",
+            "style": "bold hand-drawn white chalk capital letters, two lines",
+            "position": "FRESH on the top line, BREAD below it, centered on the board"
+          }
+        ],
+        "causal_events": [],
+        "audio": {
+          "dialogue_lines": [],
+          "ambience_deltas": [
+            {
+              "timestamp_range": "00:05.0-00:10.0",
+              "ambience": "oven fan hum"
+            }
+          ],
+          "special_audio_events": [
+            {
+              "timestamp": "00:05.0-00:08.0",
+              "sound_description": "chalk scratching on slate",
+              "visual_sync": "matches the writing"
+            },
+            {
+              "timestamp": "00:08.8",
+              "sound_description": "a soft clap of dusty hands",
+              "visual_sync": "matches the hand clap"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
