@@ -396,6 +396,10 @@ is reported as expected on IOMMU hosts).
 ### Out of memory
 
 - GPU: make sure nothing else is using the GPUs (`nvidia-smi`). Peak use is ~88 GB of 96 GB.
+- GPU, at the very end of a 1080p clip (during video decoding): the full Wan2.2 decoder, the 1080p
+  default, briefly reserves ~86 GB per GPU. On cards with less headroom (e.g. 94 GB), switch to the
+  lighter turbo decoder with `MAGI2_TURBO_VAE=1`; it is slightly less sharp
+  (see [measurements](#quality-settings-what-we-measured)).
 - Host RAM: the text encoder needs ~56 GB on the CPU. Stop apps that cache models in RAM (e.g. ComfyUI).
 
 ### `OutOfResources: shared memory` in a Triton kernel
