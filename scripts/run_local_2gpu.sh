@@ -10,8 +10,8 @@
 # Usage:
 #   scripts/run_local_2gpu.sh [--resolution 540p|1080p] [entry.py args...]
 # Output goes to output/runs/<timestamp>/ unless --output <repo-relative dir> is given.
-# Quality knobs (env): MAGI2_VG / MAGI2_AG (video/audio guidance), MAGI2_TURBO_VAE=0
-# (full Wan2.2 decoder), MAGI2_PREVIEW_CACHE_DIR=<dir> (save 540p previews),
+# Quality knobs (env): MAGI2_VG / MAGI2_AG (video/audio guidance), MAGI2_TURBO_VAE=0|1
+# (full Wan2.2 decoder, default at 1080p | distilled turbo decoder, default at 540p), MAGI2_PREVIEW_CACHE_DIR=<dir> (save 540p previews),
 # MAGI2_PREVIEW_CACHE_LOAD=<file> (refiner-only run from a saved preview).
 # Paths are relative to the repo root.
 # Smoke test without the preview/refiner/text-encoder weights:
@@ -21,8 +21,8 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CKPT="${MAGI2_CKPT_ROOT_HOST:-$(dirname "$REPO")/ckpt}"
 CACHE="${MAGI2_CACHE_HOST:-$(dirname "$REPO")/cache}"
-IMAGE="${MAGI2_IMAGE:-sandai/magi-2-preview:latest}"
-mkdir -p "$CACHE/home" "$CACHE/magi_compiler" "$CACHE/magi_attention" "$REPO/output"
+source "$REPO/scripts/image.env"
+IMAGE="${MAGI2_IMAGE:-$MAGI2_DEFAULT_IMAGE}"
 
 RESOLUTION=540p
 OUTPUT="output/runs/$(date +%Y%m%d_%H%M%S)"
@@ -37,18 +37,26 @@ done
 case "$RESOLUTION" in
   1080p) CONFIG=configs/local/2gpu_refiner.json
          # Free preview experts while the refiner runs; re-stream per clip.
-         : "${MAGI2_PREVIEW_RELEASE_EXPERTS:=1}" ;;
+         : "${MAGI2_PREVIEW_RELEASE_EXPERTS:=1}"
+         # Full Wan2.2 decoder: measurably sharper than the turbo decoder at 1080p, same run time.
+         : "${MAGI2_TURBO_VAE:=0}" ;;
   *)     CONFIG=configs/local/2gpu_preview.json ;;
 esac
 [[ " ${ARGS[*]-} " == *" --prompt"* || " ${ARGS[*]-} " == *" --samples"* ]] \
   || ARGS+=(--prompt "A red fox trots through fresh snow at dawn, breath steaming, soft crunching footsteps.")
 
-mkdir -p "$REPO/$OUTPUT"
+# magi_compiler keys compiled graphs by model index, not input shape, so runs with
+# different resolutions / pipeline modes must not share a compile cache.
+COMPILE_KEY="$RESOLUTION"
+[[ -n "${MAGI2_PREVIEW_CACHE_LOAD:-}" ]] && COMPILE_KEY+="_refiner_only"
+[[ "${SKIP_LOAD_MODEL:-0}" == 1 ]] && COMPILE_KEY+="_skipload"
+COMPILE_CACHE="$CACHE/magi_compiler/$COMPILE_KEY"
+mkdir -p "$CACHE/home" "$COMPILE_CACHE" "$CACHE/magi_attention" "$REPO/$OUTPUT"
 echo "[run_local_2gpu] output -> $REPO/$OUTPUT" >&2
 exec docker run --rm --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
   --user "$(id -u):$(id -g)" \
   -v "$REPO":/workspace/magi2 -v "$CKPT":/ckpt:ro \
-  -v "$CACHE/home":/tmp/home -v "$CACHE/magi_compiler":/tmp/magi_compiler_cache \
+  -v "$CACHE/home":/tmp/home -v "$COMPILE_CACHE":/tmp/magi_compiler_cache \
   -v "$CACHE/magi_attention":/tmp/magi_attention \
   -w /workspace/magi2 \
   -e HOME=/tmp/home -e MAGI2_CKPT_ROOT=/ckpt -e PYTHONPATH=/workspace/magi2 \

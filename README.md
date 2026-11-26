@@ -21,15 +21,17 @@ The original upstream README (model description, prompt-enhancement details) is 
 - [Requirements](#requirements)
 - [Setup](#setup)
   - [1. Clone](#1-clone)
-  - [2. Docker image](#2-docker-image)
-  - [3. Model weights (~307 GB)](#3-model-weights-307-gb)
-  - [4. Smoke test (no weights needed)](#4-smoke-test-no-weights-needed)
+  - [2. Check the machine](#2-check-the-machine)
+  - [3. Docker image](#3-docker-image)
+  - [4. Model weights (~307 GB)](#4-model-weights-307-gb)
+  - [5. Smoke test (no weights needed)](#5-smoke-test-no-weights-needed)
 - [Generating videos](#generating-videos)
   - [Text-to-video](#text-to-video)
   - [Image + text to video](#image--text-to-video)
   - [Prompts: why structure matters](#prompts-why-structure-matters)
   - [Draft at 540p, finish at 1080p](#draft-at-540p-finish-at-1080p)
   - [Options](#options)
+- [Quality settings: what we measured](#quality-settings-what-we-measured)
 - [Performance](#performance)
 - [How it fits in 2× 96 GB](#how-it-fits-in-2-96-gb)
 - [Troubleshooting](#troubleshooting)
@@ -51,7 +53,7 @@ The original upstream README (model description, prompt-enhancement details) is 
 | MoE Triton tiles | Need 120 KB shared memory per block | Smaller tiles for sm_120 (99 KB limit), ~195 TFLOP/s | `inference/flash_mh_moe/triton/mh_moe_fwd.py` |
 | 1080p memory | Park models in host RAM between stages | Free the preview's expert weights (~51 GB/GPU) while the refiner runs, then re-stream them for the next clip | `inference_engine.py` (`MAGI2_PREVIEW_RELEASE_EXPERTS`) |
 | Parallelism | cp = ep = 8 | cp = ep = 2 | `configs/local/` |
-| Video decoder | Turbo (distilled) decoder only; the full Wan2.2 decode path was removed | Turbo by default; full Wan2.2 decode restored as an option | `inference/model/vae2_2.py` (`MAGI2_TURBO_VAE=0`) |
+| Video decoder | Turbo (distilled) decoder only; the full Wan2.2 decode path was removed | Full Wan2.2 decode restored; default at 1080p (sharper, see [measurements](#quality-settings-what-we-measured)), turbo at 540p | `inference/model/vae2_2.py` (`MAGI2_TURBO_VAE`) |
 | Workflow | – | Save 540p previews and finish them at 1080p later; guidance overrides; a fake text encoder for smoke tests; one launcher script | `scripts/`, `inference_engine.py`, `entry.py` |
 
 The sampler, schedulers, configs (apart from the parallel sizes) and default hyper-parameters are the same as upstream.
@@ -81,7 +83,7 @@ Close other GPU-heavy apps first. For example, ComfyUI keeps unloaded models in 
 ### 1. Clone
 
 ```bash
-git clone <this-repo-url> MAGI-2-Preview/code
+git clone https://github.com/Abbara/MAGI-2-preview-2gpu MAGI-2-Preview/code
 cd MAGI-2-Preview/code
 ```
 
@@ -96,25 +98,34 @@ MAGI-2-Preview/
 
 To put the weights elsewhere, set `MAGI2_CKPT_ROOT_HOST=/path/to/ckpt` for both the download and the run scripts.
 
-### 2. Docker image
+### 2. Check the machine
+
+Before downloading anything big, run the preflight check. It changes nothing; it reports the GPUs
+(count, memory, architecture), RAM, free disk, Docker and the NVIDIA Container Toolkit, and whether
+the IOMMU is likely to break GPU-to-GPU transfers:
+
+```bash
+scripts/check_system.sh          # a few seconds
+scripts/check_system.sh --gpu    # after pulling the image: also tests GPU-to-GPU (NCCL) transfers, ~1 min
+```
+
+Fix every `FAIL` line before going on. `WARN` lines are advisory.
+
+### 3. Docker image
 
 All Python dependencies (PyTorch 2.9 / CUDA 13, FA2, Triton, MagiCompiler, ffmpeg, …) come from the
 upstream image. The code is **not** baked into it; the launcher mounts this repo at run time.
 
 ```bash
-docker pull sandai/magi-2-preview:latest      # 12.7 GB download, 41.7 GB on disk
-```
-
-This fork was tested against image digest
-`sha256:a81785240796338b9552bade5e62721aabace4a80dd1b30a9bdaa2651821b020` (build `2712106`, 2026-08-05).
-To pin exactly that build:
-
-```bash
 docker pull sandai/magi-2-preview@sha256:a81785240796338b9552bade5e62721aabace4a80dd1b30a9bdaa2651821b020
-export MAGI2_IMAGE=sandai/magi-2-preview@sha256:a81785240796338b9552bade5e62721aabace4a80dd1b30a9bdaa2651821b020
+# 12.7 GB download, 41.7 GB on disk
 ```
 
-### 3. Model weights (~307 GB)
+That digest (build `2712106`, 2026-08-05) is the build this fork was tested with, and the launcher
+uses it by default (set in `scripts/image.env`). To try a newer upstream build instead:
+`docker pull sandai/magi-2-preview:latest` and run with `MAGI2_IMAGE=sandai/magi-2-preview:latest`.
+
+### 4. Model weights (~307 GB)
 
 Weights are **not** stored in this repository. They come from the Hugging Face repo
 [`sand-ai/MAGI-2-preview`](https://huggingface.co/sand-ai/MAGI-2-preview), pinned to revision
@@ -131,8 +142,8 @@ scripts/download_weights.sh                 # all components into ../ckpt, then 
 | `text_encoder/` | 55.6 GB (11 shards) | Qwen3.5-27B, used as the text encoder | [Qwen/Qwen3.5-27B](https://huggingface.co/Qwen/Qwen3.5-27B) |
 | `refiner/` | 13.5 GB (3 shards) | MAGI-2 refiner: 540p → 1080p, 12.5 → 25 fps | Sand AI |
 | `stable-audio-open-1.0/` | 4.9 GB | Audio VAE that decodes the generated audio latents | Stability AI, Stable Audio Open 1.0 |
-| `vae/` | 2.8 GB | Wan2.2 video VAE (encoder for image input; optional full decoder) | [Wan-AI/Wan2.2-TI2V-5B](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B) |
-| `turbo_vae/` | 1.9 GB | Distilled fast video decoder (default) | Sand AI |
+| `vae/` | 2.8 GB | Wan2.2 video VAE (encoder for image input; full decoder, default at 1080p) | [Wan-AI/Wan2.2-TI2V-5B](https://huggingface.co/Wan-AI/Wan2.2-TI2V-5B) |
+| `turbo_vae/` | 1.9 GB | Distilled fast video decoder (default at 540p) | Sand AI |
 
 All six are mirrored in the single `sand-ai/MAGI-2-preview` repo, so one download covers everything.
 
@@ -160,7 +171,7 @@ hf download sand-ai/MAGI-2-preview \
 On a fast connection the full set took about 25 minutes. For faster downloads, `pip install hf_transfer`
 and `export HF_HUB_ENABLE_HF_TRANSFER=1`. If the Hub ever requires it, log in with `hf auth login` or set `HF_TOKEN`.
 
-### 4. Smoke test (no weights needed)
+### 5. Smoke test (no weights needed)
 
 Before or during the big download, check that the GPUs, kernels and multi-GPU setup work. This uses
 synthetic preview/refiner weights and a fake text encoder, and only needs the ~10 GB set above:
@@ -280,10 +291,10 @@ Environment variables read by the launcher:
 | Variable | Default | Meaning |
 |---|---|---|
 | `MAGI2_VG`, `MAGI2_AG` | 5.0, 7.0 (from config) | Video / audio text-guidance scale |
-| `MAGI2_TURBO_VAE` | 1 | `0` = decode with the full Wan2.2 VAE instead of the distilled turbo decoder |
+| `MAGI2_TURBO_VAE` | 1 at 540p, 0 at 1080p | `1` = distilled turbo decoder, `0` = full Wan2.2 VAE decoder |
 | `MAGI2_PREVIEW_CACHE_DIR` / `MAGI2_PREVIEW_CACHE_LOAD` | – | Save 540p previews / refine a saved one (see above) |
 | `MAGI2_CKPT_ROOT_HOST` | `../ckpt` | Host path of the weights |
-| `MAGI2_IMAGE` | `sandai/magi-2-preview:latest` | Docker image |
+| `MAGI2_IMAGE` | tested digest (`scripts/image.env`) | Docker image |
 | `MAGI2_MOE_FP8` | 1 | FP8 expert storage. `0` (bf16) does **not** fit on 2 × 96 GB |
 | `MAGI2_PREVIEW_RELEASE_EXPERTS` | 1 at 1080p | Free preview experts during the refiner |
 | `MAGI2_TEXT_ENC_OFFLOAD_MODE` | `cpu` | Where the text encoder runs (`cpu` / `gpu` / `roundtrip`) |
@@ -295,6 +306,44 @@ Environment variables read by the launcher:
 
 ---
 
+## Quality settings: what we measured
+
+All runs used `prompts/fox_structured.json` (`scripts/quality_matrix.sh` reproduces them; outputs go to
+`output/quality/`). Sharpness is the mean variance of the Laplacian, one frame per second; audio level
+is ffmpeg `volumedetect` mean volume.
+
+**1080p refiner, all from the same saved 540p draft (seed 42):**
+
+| Refiner steps | Decoder | Run time¹ | Sharpness | PSNR vs 5-step turbo |
+|---|---|---|---|---|
+| 5 | **full Wan2.2** | **12 min** | **43.7** | 46.1 dB |
+| 5 | turbo | 15 min² | 38.3 | – |
+| 8 | turbo | 16 min | 38.3 | 48.2 dB |
+| 12 | turbo | 20 min | 39.0 | 46.4 dB |
+
+¹ Refine-only runs from a cached draft (load, refine, decode). ² Includes a one-time decoder compile.
+
+- **The full decoder is the one setting that adds visible detail** (about 14% sharper fur and snow texture)
+  with no time cost, so it is now the 1080p default.
+- **More refiner steps don't help.** PSNR above 46 dB means visually near-identical clips; each step
+  costs about 50 s. Keep the default of 5.
+
+**540p draft stage (100 steps, ~32 min each):**
+
+| Run | Video / audio guidance | Audio mean / peak | Notes |
+|---|---|---|---|
+| Seed 42 | 5 / 7 (default) | −43.4 / −22.2 dB | baseline |
+| Seed 43 | 5 / 7 | −40.4 / −18.3 dB | different framing, paw prints in the snow |
+| Seed 44 | 5 / 7 | −41.5 / −22.8 dB | denser forest, taller sapling |
+| Seed 42, low guidance | 3.5 / 5 | −56.0 / −36.0 dB | nearly silent |
+| Seed 42, high guidance | 7 / 9 | −36.6 / −12.0 dB | loudest, clearest sound; harder contrast in the fur |
+
+- **Guidance mostly changes the audio.** Low guidance nearly mutes it; raise `MAGI2_AG` if the sound is too quiet.
+- **Seeds change the composition, not the quality.** Every seed played out all the prompt's beats.
+  Draft a few seeds at 540p, then refine the best one ([workflow above](#draft-at-540p-finish-at-1080p)).
+
+---
+
 ## Performance
 
 Measured on the reference machine (2× RTX PRO 6000, 16-core Threadripper, NVMe):
@@ -303,7 +352,7 @@ Measured on the reference machine (2× RTX PRO 6000, 16-core Threadripper, NVMe)
 |---|---|
 | Stream 228 GB of preview weights to both GPUs (FP8-quantizing on the fly) | ~35 s (weights partly in the page cache) |
 | 540p generation, 100 steps | ~29 min (17.4 s/step; the first step includes a ~1-2 min compile) |
-| 1080p refiner (5 steps) + decode | a few minutes |
+| 1080p refiner (5 steps, ~50 s/step) + decode | ~5 min |
 | **One 1080p clip, end to end** | **~42 min** |
 | One 540p clip, end to end | ~32 min |
 
@@ -339,9 +388,10 @@ Measured on the reference machine (2× RTX PRO 6000, 16-core Threadripper, NVMe)
 Peer-to-peer PCIe transfers between the GPUs silently hang on some workstation platforms, usually
 when the IOMMU is in translated mode. `nvidia-smi topo -p2p r` may still report `OK`. Symptom: after
 10 minutes, `Watchdog caught collective operation timeout … OpType=BROADCAST`. The launcher sets
-`NCCL_P2P_DISABLE=1` (transfers go through host memory, ~28 GB/s, enough for this workload).
+`NCCL_P2P_DISABLE=1` (transfers go through host memory, ~28-30 GB/s, enough for this workload).
 To fix it at the platform level, add `iommu=pt` to the kernel command line (GRUB) and reboot, then
-try `NCCL_P2P_DISABLE=0`. To test NCCL on its own, run a 2-process `all_reduce`, with and without the variable.
+try `NCCL_P2P_DISABLE=0`. `scripts/check_system.sh --gpu` tests both modes (a hang with P2P enabled
+is reported as expected on IOMMU hosts).
 
 ### Out of memory
 
@@ -361,6 +411,12 @@ Use a structured prompt (see [Prompts](#prompts-why-structure-matters)). This wa
 
 Kernels are compiled on first use and cached in `../cache/`. Later runs start faster.
 
+### `AssertionError: expected size … stride …` from a compiled graph
+
+A stale compiled graph from a run with different input shapes. The launcher keeps a separate compile
+cache per resolution and mode (`../cache/magi_compiler/<key>/`), so this shouldn't happen any more.
+If it does, delete `../cache/magi_compiler/` and rerun.
+
 ---
 
 ## Limitations
@@ -378,6 +434,8 @@ Kernels are compiled on first use and cached in `../cache/`. Later runs start fa
 ```
 configs/local/2gpu_*.json          cp=2 / ep=2 overlays on the upstream configs
 scripts/run_local_2gpu.sh          launcher (Docker, both GPUs, all env knobs)
+scripts/image.env                  pinned Docker image digest used by the scripts
+scripts/check_system.sh            preflight: GPUs, RAM, disk, Docker, NVIDIA toolkit, NCCL
 scripts/download_weights.sh        fetch + verify weights (pinned HF revision)
 scripts/verify_weights.py          verify an existing download (size, layout, optional SHA-256)
 scripts/quality_matrix.sh          the prompt / seed / guidance / refiner / decoder comparison we ran
