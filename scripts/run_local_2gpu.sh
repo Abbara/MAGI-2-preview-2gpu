@@ -59,7 +59,7 @@ esac
 COMPILE_KEY="$RESOLUTION"
 [[ "$ORIENTATION" != landscape ]] && COMPILE_KEY+="_$ORIENTATION"
 # Any explicit size flag is a shape too: key the cache by those values.
-SIZE_ARGS=$(printf '%s\n' "${ARGS[@]-}" | grep -A1 -E '^--(preview|refiner)-(width|height)$' | tr '\n' ' ')
+SIZE_ARGS=$(printf '%s\n' "${ARGS[@]-}" | { grep -A1 -E '^--(preview|refiner)-(width|height)$' || true; } | tr '\n' ' ')
 [[ -n "$SIZE_ARGS" && "$ORIENTATION" == landscape ]] \
   && COMPILE_KEY+="_$(printf '%s' "$SIZE_ARGS" | md5sum | cut -c1-8)"
 [[ -n "${MAGI2_PREVIEW_CACHE_LOAD:-}" ]] && COMPILE_KEY+="_refiner_only"
