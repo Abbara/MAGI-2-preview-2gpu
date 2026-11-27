@@ -70,6 +70,9 @@ class Magi2Pipeline:
         output_height: Optional[int] = None,
         num_inference_steps: Optional[int] = None,
         magi2_refiner_num_inference_steps: Optional[int] = None,
+        ref_video: Optional[str] = None,
+        ref_video_start: float = 0.0,
+        ref_video_strength: float = 0.85,
     ):
         """Run a single offline inference job."""
         self.evaluator.run(
@@ -85,6 +88,9 @@ class Magi2Pipeline:
             output_height=output_height,
             num_inference_steps=num_inference_steps,
             magi2_refiner_num_inference_steps=magi2_refiner_num_inference_steps,
+            ref_video=ref_video,
+            ref_video_start=ref_video_start,
+            ref_video_strength=ref_video_strength,
         )
 
 
@@ -139,6 +145,9 @@ class Magi2Evaluator:
         output_height: Optional[int] = None,
         num_inference_steps: Optional[int] = None,
         magi2_refiner_num_inference_steps: Optional[int] = None,
+        ref_video: Optional[str] = None,
+        ref_video_start: float = 0.0,
+        ref_video_strength: float = 0.85,
     ):
         """Run full inference: text encode -> denoise -> VAE decode -> save."""
         steps = num_inference_steps or self.config.num_inference_steps
@@ -164,6 +173,9 @@ class Magi2Evaluator:
             refiner_width=refiner_width,
             refiner_height=refiner_height,
             magi2_refiner_num_inference_steps=refiner_steps if refiner_width else None,
+            ref_video=ref_video,
+            ref_video_start=ref_video_start,
+            ref_video_strength=ref_video_strength,
         )
 
         if video_np is not None:

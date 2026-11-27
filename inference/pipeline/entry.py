@@ -43,6 +43,15 @@ def parse_args():
                    help="Path(s) to .txt file(s) containing prompts.")
     p.add_argument("--image", type=str, nargs="*", default=None,
                    help="First-frame image(s) for i2v. Omit for text-to-video.")
+    p.add_argument("--ref-video", type=str, default=None,
+                   help="Source clip for video-to-video: the draft starts from this clip, noised, so its "
+                   "motion and timing carry over while the prompt and --image redraw the look. MAGI-2 has "
+                   "no trained reference-video input; this conditions the start of the denoise (SDEdit).")
+    p.add_argument("--ref-video-start", type=float, default=0.0,
+                   help="Seconds into --ref-video where the clip starts.")
+    p.add_argument("--ref-video-strength", type=float, default=0.85,
+                   help="Noise level the draft starts from, 0-1. 1 ignores the clip; lower keeps more of its "
+                   "motion and layout, and also more of its look.")
     p.add_argument("--samples", type=str, default=None,
                    help="Path to JSON file describing a batch of samples. "
                    "Each entry: {prompt|prompt_file, image?}. Mutually exclusive with --prompt/--image.")
@@ -90,7 +99,8 @@ def _load_samples(path: str) -> list[dict]:
 
     Each entry is ``{"prompt": "...", "image": "path"}`` or
     ``{"prompt_file": "path.txt", "image": "path"}``.
-    Omit ``image`` for text-to-video.
+    Omit ``image`` for text-to-video. ``ref_video``, ``ref_video_start`` and
+    ``ref_video_strength`` work as the CLI flags of the same names, per sample.
     """
     import json
     with open(path) as f:
@@ -101,7 +111,8 @@ def _load_samples(path: str) -> list[dict]:
             prompt = open(entry["prompt_file"]).read().strip()
         else:
             prompt = entry["prompt"]
-        samples.append({"prompt": prompt, "image_path": entry.get("image")})
+        samples.append({"prompt": prompt, "image_path": entry.get("image"),
+                        **{k: entry[k] for k in ("ref_video", "ref_video_start", "ref_video_strength") if k in entry}})
     return samples
 
 
@@ -199,6 +210,9 @@ def main():
             output_height=args.output_height,
             num_inference_steps=args.num_inference_steps,
             magi2_refiner_num_inference_steps=args.refiner_num_inference_steps,
+            ref_video=sample.get("ref_video", args.ref_video),
+            ref_video_start=float(sample.get("ref_video_start", args.ref_video_start)),
+            ref_video_strength=float(sample.get("ref_video_strength", args.ref_video_strength)),
         )
 
     if dist.is_initialized():

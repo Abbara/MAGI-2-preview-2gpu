@@ -371,6 +371,83 @@ class Magi2InferenceEngine:
         )
         return ref_image_feat, ref_image_feat_len, ref_image_ids
 
+    def _read_ref_video(self, path: str, start: float, num_frames: int, height: int, width: int) -> torch.Tensor:
+        """Decode ``num_frames`` frames at the preview frame rate, cover-cropped to
+        ``width`` x ``height``, as a ``(1, 3, T, H, W)`` tensor in [-1, 1].
+
+        A source shorter than the clip is padded by holding its last frame, so the
+        motion plays out and then the pose holds.
+        """
+        import subprocess
+
+        cmd = [
+            "ffmpeg", "-v", "error", "-ss", f"{start:.3f}", "-i", path, "-an",
+            "-vf", f"fps={self.fps},scale={width}:{height}:force_original_aspect_ratio=increase:flags=lanczos,"
+                   f"crop={width}:{height}",
+            "-frames:v", str(num_frames), "-f", "rawvideo", "-pix_fmt", "rgb24", "-",
+        ]
+        raw = subprocess.run(cmd, check=True, capture_output=True).stdout
+        frames = np.frombuffer(raw, dtype=np.uint8).reshape(-1, height, width, 3)
+        if len(frames) == 0:
+            raise ValueError(f"no frames decoded from reference video {path} at {start}s")
+        decoded = len(frames)
+        if decoded < num_frames:
+            frames = np.concatenate([frames, np.repeat(frames[-1:], num_frames - decoded, axis=0)])
+        print_rank_0(
+            f"[magi2] ref video: {path} from {start:.2f}s, {decoded} source frames -> {num_frames} "
+            f"at {self.fps} fps, {width}x{height}"
+        )
+        video = torch.from_numpy(frames.copy()).permute(3, 0, 1, 2).unsqueeze(0)  # 1, 3, T, H, W
+        return video.float().div_(127.5).sub_(1.0)
+
+    def _start_from_ref_video(
+        self,
+        noise: torch.Tensor,
+        path: str,
+        start: float,
+        strength: float,
+        height: int,
+        width: int,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Video-to-video start for the preview denoise (SDEdit).
+
+        MAGI-2 has no trained reference-video input: the preview proxy never packs
+        ``ref_video_feat``, and the refiner's slot holds a single square still. A
+        source clip conditions the draft through its starting point instead: it is
+        encoded to the preview latent, noised to the first scheduler step whose
+        sigma is at most ``strength``, and the denoise runs from that step. Coarse
+        motion, timing and layout come from the source; the prompt and the
+        first-frame image redraw the look. 1.0 ignores the clip; lower values keep
+        more of it, including the source's own appearance.
+        """
+        t_lat = noise.shape[2]
+        num_frames = (t_lat - 1) * 4 + 1  # Wan2.2 VAE: 4x temporal compression, causal first frame
+        if self.image_broadcaster.is_src_rank:
+            video = self._read_ref_video(path, start, num_frames, height, width).to(self.device)
+            OffloadUtils.maybe_load(self.vae, self._vae_mode, self.device)
+            x0 = self.vae.encode(video).float()
+            OffloadUtils.maybe_offload(self.vae, self._vae_mode)
+            del video
+            if tuple(x0.shape) != tuple(noise.shape):
+                raise ValueError(f"ref video latent {tuple(x0.shape)} != preview latent {tuple(noise.shape)}")
+        else:
+            x0 = None
+        x0 = self.image_broadcaster.broadcast(x0)
+
+        sigmas = self.video_scheduler.sigmas[:-1]  # the last entry is the terminal sigma
+        hits = (sigmas <= strength).nonzero().flatten()
+        begin = int(hits[0]) if len(hits) else len(sigmas) - 1
+        for scheduler in (self.video_scheduler, self.audio_scheduler):
+            scheduler.set_begin_index(begin)
+        latent = self.video_scheduler.add_noise(x0, noise, self.video_scheduler.timesteps[begin : begin + 1])
+        print_rank_0(
+            f"[magi2] ref video start: sigma {float(sigmas[begin]):.3f} (asked <= {strength}), "
+            f"{len(sigmas) - begin}/{len(sigmas)} steps"
+        )
+        # There is no audio encoder, so audio keeps its pure noise and follows the
+        # same shortened schedule; mux the source audio back in afterwards if needed.
+        return latent, self.video_scheduler.timesteps[begin:], self.audio_scheduler.timesteps[begin:]
+
     def get_special_token(
         self, prompt: str, figure_ids: torch.Tensor, text_feature: torch.Tensor
     ) -> torch.Tensor:
@@ -417,6 +494,9 @@ class Magi2InferenceEngine:
         refiner_width: Optional[int] = None,
         refiner_height: Optional[int] = None,
         magi2_refiner_num_inference_steps: Optional[int] = None,
+        ref_video: Optional[str] = None,
+        ref_video_start: float = 0.0,
+        ref_video_strength: float = 0.85,
     ):
 
         cache_load = os.environ.get("MAGI2_PREVIEW_CACHE_LOAD")
@@ -503,10 +583,16 @@ class Magi2InferenceEngine:
         self.audio_scheduler.set_timesteps(
             br_num_inference_steps, device=self.device, shift=self.shift
         )
+        video_t_list = self.video_scheduler.timesteps
+        audio_t_list = self.audio_scheduler.timesteps
+        if ref_video:
+            latent, video_t_list, audio_t_list = self._start_from_ref_video(
+                latent, ref_video, ref_video_start, ref_video_strength, height, width
+            )
 
         sampler_input = SamplerInput(
-            video_t_list=self.video_scheduler.timesteps,
-            audio_t_list=self.audio_scheduler.timesteps,
+            video_t_list=video_t_list,
+            audio_t_list=audio_t_list,
             latent=latent,
             audio_latent=audio_latent,
             txt_feat=context,

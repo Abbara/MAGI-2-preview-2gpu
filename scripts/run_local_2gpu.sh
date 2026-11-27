@@ -8,7 +8,7 @@
 #     host (IOMMU active, no iommu=pt); host-memory transport gives ~28 GB/s.
 #
 # Usage:
-#   scripts/run_local_2gpu.sh [--resolution 540p|1080p] [entry.py args...]
+#   scripts/run_local_2gpu.sh [--resolution 540p|1080p] [--orientation landscape|portrait] [entry.py args...]
 # Output goes to output/runs/<timestamp>/ unless --output <repo-relative dir> is given.
 # Quality knobs (env): MAGI2_VG / MAGI2_AG (video/audio guidance), MAGI2_TURBO_VAE=0|1
 # (full Wan2.2 decoder, default at 1080p | distilled turbo decoder, default at 540p), MAGI2_PREVIEW_CACHE_DIR=<dir> (save 540p previews),
@@ -25,11 +25,13 @@ source "$REPO/scripts/image.env"
 IMAGE="${MAGI2_IMAGE:-$MAGI2_DEFAULT_IMAGE}"
 
 RESOLUTION=540p
+ORIENTATION=landscape
 OUTPUT="output/runs/$(date +%Y%m%d_%H%M%S)"
 ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --resolution) RESOLUTION="$2"; shift 2 ;;
+    --orientation) ORIENTATION="$2"; shift 2 ;;
     --output) OUTPUT="$2"; shift 2 ;;
     *) ARGS+=("$1"); shift ;;
   esac
@@ -42,12 +44,24 @@ case "$RESOLUTION" in
          : "${MAGI2_TURBO_VAE:=0}" ;;
   *)     CONFIG=configs/local/2gpu_preview.json ;;
 esac
+# Portrait 9:16: the transposed preview and refiner sizes.
+case "$ORIENTATION" in
+  landscape) ;;
+  portrait) ARGS+=(--preview-width 512 --preview-height 896)
+            [[ "$RESOLUTION" == 1080p ]] && ARGS+=(--refiner-width 1088 --refiner-height 1920) ;;
+  *) echo "--orientation must be landscape or portrait" >&2; exit 2 ;;
+esac
 [[ " ${ARGS[*]-} " == *" --prompt"* || " ${ARGS[*]-} " == *" --samples"* ]] \
   || ARGS+=(--prompt "A red fox trots through fresh snow at dawn, breath steaming, soft crunching footsteps.")
 
 # magi_compiler keys compiled graphs by model index, not input shape, so runs with
 # different resolutions / pipeline modes must not share a compile cache.
 COMPILE_KEY="$RESOLUTION"
+[[ "$ORIENTATION" != landscape ]] && COMPILE_KEY+="_$ORIENTATION"
+# Any explicit size flag is a shape too: key the cache by those values.
+SIZE_ARGS=$(printf '%s\n' "${ARGS[@]-}" | grep -A1 -E '^--(preview|refiner)-(width|height)$' | tr '\n' ' ')
+[[ -n "$SIZE_ARGS" && "$ORIENTATION" == landscape ]] \
+  && COMPILE_KEY+="_$(printf '%s' "$SIZE_ARGS" | md5sum | cut -c1-8)"
 [[ -n "${MAGI2_PREVIEW_CACHE_LOAD:-}" ]] && COMPILE_KEY+="_refiner_only"
 [[ "${SKIP_LOAD_MODEL:-0}" == 1 ]] && COMPILE_KEY+="_skipload"
 COMPILE_CACHE="$CACHE/magi_compiler/$COMPILE_KEY"
